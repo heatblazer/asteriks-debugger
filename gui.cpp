@@ -31,18 +31,20 @@ static int aux_strlen(const char* data)
 static void trim(char* data)
 {
     char* begin= data;
-    char* tmp = data;
+    char* end = &data[aux_strlen(data)-1];
     while(*begin == ' ') {
         begin++;
     }
-    data = begin;
 
-    tmp = &data[aux_strlen(data)-1];
-    while (*tmp == ' ') {
-        tmp--;
+    while(*begin != '\0') {
+
+        *data++ = *begin++;
     }
-    tmp++;
-    *tmp = 0;
+
+    while(*end == ' ') {
+        *end-- = 0;
+    }
+
 }
 
 
