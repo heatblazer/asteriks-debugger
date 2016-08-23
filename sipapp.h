@@ -7,6 +7,9 @@
 // pjsua //
 #include <pjsua.h>
 
+#define SIP_USER "ilianz"
+#define SIP_DOMAIN "example.com"
+#define SIP_PASS "secret"
 
 namespace izdebug {
 
@@ -22,7 +25,7 @@ public:
 
 public slots:
 
-    void makeACall();
+    void makeACall(const QString& uri);
 
 private:
 

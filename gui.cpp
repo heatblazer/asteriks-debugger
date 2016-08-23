@@ -118,12 +118,10 @@ Gui::Gui(QWidget *parent)
     {
         connect(&m_widget[0].text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()));
-        //connect(&m_widget[0].button, SIGNAL(clicked(bool)),
-        //        this, SLOT(hClicked()));
         connect(&m_widget[0].button, SIGNAL(clicked(bool)),
-                p_sipApp, SLOT(makeACall()));
-
-
+                this, SLOT(hClicked()));
+        connect(this, SIGNAL(sendUri(QString)),
+                p_sipApp, SLOT(makeACall(QString)));
         connect(this, SIGNAL(sendData(QByteArray)),
                 p_console, SLOT(handeData(QByteArray)));
 
@@ -171,12 +169,17 @@ void Gui::hClicked()
     // send the string to sip!
     char* data = m_widget[0].text.toPlainText().toLatin1().data();
     trim(data);
-
+    char tel[64]={0};
+    sprintf(tel, "%s", data);
     if(!m_widget[0].text.toPlainText().isEmpty() &&
-        _isValidDigit(data)) {
+        _isValidDigit(tel)) {
         // OK send to server
-        emit sendData(QByteArray(m_widget[0].text.toPlainText().toLatin1().constData()));
+        QString uri("sip:");
+        uri.append(tel);
+        uri.append("@192.168.32.89");
 
+        //emit sendData(QByteArray(m_widget[0].text.toPlainText().toLatin1().constData()));
+        emit sendData(QByteArray(uri.toLatin1().constData()));
     } else {
         std::cout << "ERROR IN DIGITS!" << std::endl;
     }
@@ -195,12 +198,13 @@ void Gui::hLoadWav()
 bool Gui::_isValidDigit(const char *str)
 {
     bool isOk = true;
-    while (*str != '\0') {
-        if (!IS_DIGIT(*str)) {
+    const char* tmp = &str[0];
+    while (*tmp != '\0') {
+        if (!IS_DIGIT(*tmp)) {
             isOk = false;
             break;
         }
-        str++;
+        tmp++;
     }
     return isOk;
 }

@@ -3,6 +3,8 @@
 // call //
 #include "call.h"
 
+
+
 namespace izdebug {
 
 SipApp::SipApp(QObject *parent)
@@ -53,14 +55,14 @@ bool SipApp::create(const QString &uri)
 
     pjsua_acc_config_default(&m_accCfg);
 
-    m_accCfg.id = pj_str("sip:6016@192.168.32.89");
-    m_accCfg.reg_uri = pj_str("sip:192.168.32.89");
+    m_accCfg.id = pj_str("sip:"SIP_DOMAIN);
+    m_accCfg.reg_uri = pj_str("sip:"SIP_DOMAIN);
     m_accCfg.cred_count = 1;
-    m_accCfg.cred_info[0].realm = pj_str("192.168.32.89");
+    m_accCfg.cred_info[0].realm = pj_str(SIP_DOMAIN);
     m_accCfg.cred_info[0].scheme = pj_str("digest");
-    m_accCfg.cred_info[0].username = pj_str("6016");
+    m_accCfg.cred_info[0].username = pj_str(SIP_USER);
     m_accCfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
-    m_accCfg.cred_info[0].data = pj_str("1234");
+    m_accCfg.cred_info[0].data = pj_str(SIP_PASS);
 
     status = pjsua_acc_add(&m_accCfg, PJ_TRUE, &m_acc_id);
 
@@ -72,9 +74,9 @@ bool SipApp::create(const QString &uri)
 
 }
 
-void SipApp::makeACall()
+void SipApp::makeACall(const QString &uri)
 {
-    if(p_call->makeCall(m_acc_id, QString("sip:6016@192.168.32.89"))) {
+    if(p_call->makeCall(m_acc_id, uri)) {
         // fill in later
     } else {
         // fill in later

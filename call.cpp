@@ -48,11 +48,11 @@ Call::~Call()
 
 bool Call::makeCall(pjsua_acc_id acc_id, const QString &uri)
 {
-    pj_str_t str = pj_str("sip:6016@192.168.32.89");
+    pj_str_t str = pj_str(uri.toLatin1().data());
     pjsua_call_setting settings;
     pjsua_call_setting_default(&settings);
 
-    pj_status_t status = pjsua_call_make_call(acc_id, &str, &settings, NULL, NULL, NULL);
+    pj_status_t status = pjsua_call_make_call(acc_id, &str, 0, NULL, NULL, NULL);
 
     if (status != PJ_SUCCESS) {
         return false;

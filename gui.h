@@ -50,6 +50,7 @@ public:
 
 signals:
     void sendData(const QByteArray& data);
+    void sendUri(const QString& uri);
 
 private slots:
     void hTextChange();
