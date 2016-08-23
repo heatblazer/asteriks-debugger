@@ -6,7 +6,6 @@
 // sip app //
 #include "sipapp.h"
 
-#define IS_DIGIT(D) (((D >= '0') && (D <= '9')))
 
 /// aux function to determine strlen
 /// \brief aux_strlen

@@ -7,9 +7,8 @@
 // pjsua //
 #include <pjsua.h>
 
-#define SIP_USER "ilianz"
-#define SIP_DOMAIN "example.com"
-#define SIP_PASS "secret"
+// defs //
+#include "defs.h"
 
 namespace izdebug {
 

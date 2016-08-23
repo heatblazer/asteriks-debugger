@@ -1,6 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
 
+// qt headers //
 #include <QObject>
 
 // layouts //
@@ -14,6 +15,7 @@
 #include <QPlainTextEdit>
 #include <QFileDialog>
 
+#include "defs.h"
 
 namespace izdebug {
 

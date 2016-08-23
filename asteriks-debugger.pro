@@ -49,6 +49,7 @@ HEADERS  += \
     pjsua-encdec.h \
     mem-pool.h \
     call.h \
-    sipapp.h
+    sipapp.h \
+    defs.h
 
 FORMS    +=
