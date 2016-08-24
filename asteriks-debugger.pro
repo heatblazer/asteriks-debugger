@@ -41,14 +41,12 @@ SOURCES += main.cpp \
     gui.cpp \
     pjsua-encdec.cpp \
     mem-pool.cpp \
-    call.cpp \
     sipapp.cpp
 
 HEADERS  += \
     gui.h \
     pjsua-encdec.h \
     mem-pool.h \
-    call.h \
     sipapp.h \
     defs.h
 

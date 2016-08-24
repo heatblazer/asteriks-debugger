@@ -18,18 +18,28 @@ class SipApp : public QObject
 {
     Q_OBJECT
 public:
+    static void on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id,
+                                  pjsip_rx_data* rx_data);
+
+    static void on_call_state(pjsua_call_id call_id, pjsip_event* ev);
+
+    static void on_call_media_state(pjsua_call_id call_id);
+
+
+public:
     explicit SipApp(QObject* parent=nullptr);
     virtual ~SipApp();
     bool create(const QString& uri);
 
 public slots:
 
-    void makeACall(const QString& uri);
+    void makeACall(const char *uri);
+    void hupCall(void);
 
 private:
 
     pjsua_acc_id m_acc_id;
-    Call*       p_call;
+
 };
 
 }

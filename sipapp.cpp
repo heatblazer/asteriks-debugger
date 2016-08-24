@@ -3,26 +3,55 @@
 // call //
 #include "call.h"
 
-
+// C++ //
+#include <iostream>
 
 namespace izdebug {
 
-SipApp::SipApp(QObject *parent)
-    : QObject(parent),
-      p_call(nullptr)
+
+void SipApp::on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_rx_data *rx_data)
 {
-    p_call = new Call(this);
+    pjsua_call_info info;
+    // fill info struct
+    (void) acc_id;
+    pjsua_call_get_info(call_id, &info);
+
+    pjsua_call_answer(call_id, 200, NULL, NULL);
+}
+
+void SipApp::on_call_state(pjsua_call_id call_id, pjsip_event *ev)
+{
+    pjsua_call_info info;
+    (void) ev;
+    pjsua_call_get_info(call_id, &info);
+
+
+    //emit hasMessage(m_message);
+
+}
+
+void SipApp::on_call_media_state(pjsua_call_id call_id)
+{
+    pjsua_call_info info;
+    pjsua_call_get_info(call_id, &info);
+
+    if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
+        pjsua_conf_connect(info.conf_slot, 0);
+        pjsua_conf_connect(0, info.conf_slot);
+    }
+
+}
+
+
+
+SipApp::SipApp(QObject *parent)
+    : QObject(parent)
+{
 }
 
 SipApp::~SipApp()
 {
-    // forgot to destry pjsip and you will have problems later
-    if (p_call != nullptr) {
-        delete p_call;
-        p_call = nullptr;
-    }
     pjsua_destroy();
-
 }
 
 bool SipApp::create(const QString &uri)
@@ -42,9 +71,9 @@ bool SipApp::create(const QString &uri)
         pjsua_config cfg;
         pjsua_config_default(&cfg);
 
-        cfg.cb.on_incoming_call = &Call::on_incomming_call;
-        cfg.cb.on_call_media_state = &Call::on_call_media_state;
-        cfg.cb.on_call_state = &Call::on_call_state;
+        cfg.cb.on_incoming_call = &SipApp::on_incomming_call;
+        cfg.cb.on_call_media_state = &SipApp::on_call_media_state;
+        cfg.cb.on_call_state = &SipApp::on_call_state;
 
         status = pjsua_init(&cfg, NULL, NULL);
 
@@ -92,17 +121,23 @@ bool SipApp::create(const QString &uri)
         }
 
     }
-    return true;
 
+    return true;
 }
 
-void SipApp::makeACall(const QString &uri)
+void SipApp::makeACall(const char* uri)
 {
-    if(p_call->makeCall(m_acc_id, uri)) {
-        // fill in later
-    } else {
-        // fill in later
+    pj_str_t s = pj_str((char*)uri);
+    pj_status_t status = pjsua_call_make_call(m_acc_id, &s
+                                  , 0, NULL, NULL, NULL);
+    if (status != PJ_SUCCESS) {
+        std::cout << "Failed to make a call!" << std::endl;
     }
+}
+
+void SipApp::hupCall()
+{
+    pjsua_call_hangup_all();
 }
 
 } // namespace izdebug

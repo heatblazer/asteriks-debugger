@@ -15,13 +15,6 @@ class Call : public QObject
 
 public:
 
-    static void on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id,
-                                  pjsip_rx_data* rx_data);
-
-    static void on_call_state(pjsua_call_id call_id, pjsip_event* ev);
-
-    static void on_call_media_state(pjsua_call_id call_id);
-
 
     explicit Call(QObject* parent=nullptr);
     virtual ~Call();

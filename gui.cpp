@@ -73,21 +73,28 @@ Gui::Gui(QWidget *parent)
     {
         m_widget[0].text.setMinimumSize(200, 25);
         m_widget[0].text.setMaximumSize(200, 25);
-        m_widget[0].button.setText("DIAL");
-        m_widget[0].button.setMaximumSize(125, 25);
-        m_widget[0].button.setMinimumSize(125, 25);
+
+        m_widget[0].button1.setText("DIAL");
+        m_widget[0].button1.setMaximumSize(100, 25);
+        m_widget[0].button1.setMinimumSize(100, 25);
+
+        m_widget[0].button2.setText("HUP");
+        m_widget[0].button2.setMaximumSize(100, 25);
+        m_widget[0].button2.setMinimumSize(100, 25);
+
         m_widget[0].layout.addWidget(&m_widget[0].text, 0, Qt::AlignRight);
-        m_widget[0].layout.addWidget(&m_widget[0].button, 0, Qt::AlignRight);
+        m_widget[0].layout.addWidget(&m_widget[0].button1, 0, Qt::AlignRight);
+        m_widget[0].layout.addWidget(&m_widget[0].button2, 0, Qt::AlignRight);
     }
 
     {
         m_widget[1].text.setMinimumSize(200, 25);
         m_widget[1].text.setMaximumSize(200, 25);
-        m_widget[1].button.setText("Encode WAV");
-        m_widget[1].button.setMaximumSize(125, 25);
-        m_widget[1].button.setMinimumSize(125, 25);
+        m_widget[1].button1.setText("Encode WAV");
+        m_widget[1].button1.setMaximumSize(125, 25);
+        m_widget[1].button1.setMinimumSize(125, 25);
         m_widget[1].layout.addWidget(&m_widget[1].text, 0, Qt::AlignRight);
-        m_widget[1].layout.addWidget(&m_widget[1].button, 0, Qt::AlignRight);
+        m_widget[1].layout.addWidget(&m_widget[1].button1, 0, Qt::AlignRight);
 
     }
 
@@ -96,11 +103,11 @@ Gui::Gui(QWidget *parent)
         m_widget[2].text.setMaximumSize(200, 25);
         m_widget[2].text.setEnabled(false);
 
-        m_widget[2].button.setText("Open WAV");
-        m_widget[2].button.setMaximumSize(125, 25);
-        m_widget[2].button.setMinimumSize(125, 25);
+        m_widget[2].button1.setText("Open WAV");
+        m_widget[2].button1.setMaximumSize(125, 25);
+        m_widget[2].button1.setMinimumSize(125, 25);
         m_widget[2].layout.addWidget(&m_widget[2].text, 0, Qt::AlignRight);
-        m_widget[2].layout.addWidget(&m_widget[2].button, 0, Qt::AlignRight);
+        m_widget[2].layout.addWidget(&m_widget[2].button1, 0, Qt::AlignRight);
 
     }
 
@@ -120,12 +127,12 @@ Gui::Gui(QWidget *parent)
     {
         connect(&m_widget[0].text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()));
-        connect(&m_widget[0].button, SIGNAL(clicked(bool)),
+        connect(&m_widget[0].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked()));
-        connect(this, SIGNAL(sendUri(QString)),
-                p_sipApp, SLOT(makeACall(QString)));
-        //connect(this, SIGNAL(sendData(QByteArray)),
-        //        p_console, SLOT(handeData(QByteArray)));
+        connect(this, SIGNAL(sendUri(const char*)),
+                p_sipApp, SLOT(makeACall(const char*)));
+        connect(&m_widget[0].button2, SIGNAL(clicked(bool)),
+                p_sipApp, SLOT(hupCall()));
 
     }
 
@@ -133,7 +140,7 @@ Gui::Gui(QWidget *parent)
     {
         connect(&m_widget[1].text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()));
-        connect(&m_widget[1].button, SIGNAL(clicked(bool)),
+        connect(&m_widget[1].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClear()));
 
     }
@@ -145,7 +152,7 @@ Gui::Gui(QWidget *parent)
 
         connect(&m_widget[2].text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()));
-        connect(&m_widget[2].button, SIGNAL(clicked(bool)),
+        connect(&m_widget[2].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hLoadWav()));
     }
 }
@@ -177,10 +184,8 @@ void Gui::hClicked()
     if(!m_widget[0].text.toPlainText().isEmpty() &&
         _isValidDigit(tel)) {
         // OK send to server
-        QString uri("sip:");
-        uri.append(tel);
-        uri.append("@192.168.32.89");
-
+        char uri[256]={0};
+        sprintf(uri, "sip:%s@192.168.32.89", tel);
         //emit sendData(QByteArray(m_widget[0].text.toPlainText().toLatin1().constData()));
         //emit sendData(QByteArray(uri.toLatin1().constData()));
         emit sendUri(uri);

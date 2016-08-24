@@ -52,7 +52,7 @@ public:
 
 signals:
     void sendData(const QByteArray& data);
-    void sendUri(const QString& uri);
+    void sendUri(const char* uri);
 
 private slots:
     void hTextChange();
@@ -70,7 +70,8 @@ private:
 
     struct {
         QTextEdit   text;
-        QPushButton button;
+        QPushButton button1;
+        QPushButton button2;
         QVBoxLayout layout;
     } m_widget[3];
 
