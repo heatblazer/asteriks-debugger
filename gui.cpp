@@ -49,6 +49,7 @@ static void trim(char* data)
 
 namespace izdebug {
 
+
 Gui::Gui(QWidget *parent)
     : QWidget(parent)
 {
@@ -123,8 +124,8 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(hClicked()));
         connect(this, SIGNAL(sendUri(QString)),
                 p_sipApp, SLOT(makeACall(QString)));
-        connect(this, SIGNAL(sendData(QByteArray)),
-                p_console, SLOT(handeData(QByteArray)));
+        //connect(this, SIGNAL(sendData(QByteArray)),
+        //        p_console, SLOT(handeData(QByteArray)));
 
     }
 
@@ -146,18 +147,19 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(hTextChange()));
         connect(&m_widget[2].button, SIGNAL(clicked(bool)),
                 this, SLOT(hLoadWav()));
-
-
     }
-
-    show();
 }
 
 Gui::~Gui()
 {
+    std::cout << "Gui destroyed" << std::endl;
     if (p_console != nullptr) {
         delete p_console;
         p_console = nullptr;
+    }
+    if(p_sipApp != nullptr) {
+        delete p_sipApp;
+        p_sipApp = nullptr;
     }
 }
 
@@ -180,7 +182,8 @@ void Gui::hClicked()
         uri.append("@192.168.32.89");
 
         //emit sendData(QByteArray(m_widget[0].text.toPlainText().toLatin1().constData()));
-        emit sendData(QByteArray(uri.toLatin1().constData()));
+        //emit sendData(QByteArray(uri.toLatin1().constData()));
+        emit sendUri(uri);
     } else {
         std::cout << "ERROR IN DIGITS!" << std::endl;
     }

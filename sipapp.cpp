@@ -16,6 +16,12 @@ SipApp::SipApp(QObject *parent)
 
 SipApp::~SipApp()
 {
+    // forgot to destry pjsip and you will have problems later
+    if (p_call != nullptr) {
+        delete p_call;
+        p_call = nullptr;
+    }
+    pjsua_destroy();
 
 }
 
@@ -32,44 +38,60 @@ bool SipApp::create(const QString &uri)
         return false;
     }
 
-    pjsua_config_default(&m_config);
+    {
+        pjsua_config cfg;
+        pjsua_config_default(&cfg);
 
-    m_config.cb.on_incoming_call = &Call::on_incomming_call;
-    m_config.cb.on_call_media_state = &Call::on_call_media_state;
-    m_config.cb.on_call_state = &Call::on_call_state;
+        cfg.cb.on_incoming_call = &Call::on_incomming_call;
+        cfg.cb.on_call_media_state = &Call::on_call_media_state;
+        cfg.cb.on_call_state = &Call::on_call_state;
 
-    status = pjsua_init(&m_config, NULL, NULL);
+        status = pjsua_init(&cfg, NULL, NULL);
+
+        if (status != PJ_SUCCESS) {
+            return false;
+        }
+    }
+
+    {
+        pjsua_transport_config cfg;
+        pjsua_transport_id id;
+        pjsua_transport_config_default(&cfg);
+        cfg.port = 5060;
+        status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &cfg, &id);
+        if (status != PJ_SUCCESS) {
+            return false;
+        }
+
+    }
+
+    // start pjsua
+    status = pjsua_start();
 
     if (status != PJ_SUCCESS) {
         return false;
     }
 
-    pjsua_transport_config_default(&m_transCfg);
+    {
+        pjsua_acc_config cfg;
+        pjsua_acc_config_default(&cfg);
 
-    m_transCfg.port = 5060;
+        cfg.id = pj_str("sip:" SIP_USER "@" SIP_DOMAIN);
+        cfg.reg_uri = pj_str("sip:"SIP_DOMAIN);
+        cfg.cred_count = 1;
+        cfg.cred_info[0].realm = pj_str(SIP_DOMAIN);
+        cfg.cred_info[0].scheme = pj_str("digest");
+        cfg.cred_info[0].username = pj_str(SIP_USER);
+        cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
+        cfg.cred_info[0].data = pj_str(SIP_PASS);
 
-    status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &m_transCfg, NULL);
-    if (status != PJ_SUCCESS) {
-        return false;
+        status = pjsua_acc_add(&cfg, PJ_TRUE, &m_acc_id);
+
+        if (status != PJ_SUCCESS) {
+            return false;
+        }
+
     }
-
-    pjsua_acc_config_default(&m_accCfg);
-
-    m_accCfg.id = pj_str("sip:"SIP_DOMAIN);
-    m_accCfg.reg_uri = pj_str("sip:"SIP_DOMAIN);
-    m_accCfg.cred_count = 1;
-    m_accCfg.cred_info[0].realm = pj_str(SIP_DOMAIN);
-    m_accCfg.cred_info[0].scheme = pj_str("digest");
-    m_accCfg.cred_info[0].username = pj_str(SIP_USER);
-    m_accCfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
-    m_accCfg.cred_info[0].data = pj_str(SIP_PASS);
-
-    status = pjsua_acc_add(&m_accCfg, PJ_TRUE, &m_acc_id);
-
-    if (status != PJ_SUCCESS) {
-        return false;
-    }
-
     return true;
 
 }

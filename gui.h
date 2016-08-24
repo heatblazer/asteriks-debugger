@@ -76,8 +76,6 @@ private:
 
     Console*     p_console;
     QFileDialog m_fileBrowser;
-
-    // sip application here
     SipApp*     p_sipApp;
 
 };

@@ -29,10 +29,6 @@ public slots:
 private:
 
     pjsua_acc_id m_acc_id;
-    pjsua_config m_config;
-    pjsua_transport_config m_transCfg;
-    pjsua_acc_config m_accCfg;
-
     Call*       p_call;
 };
 
