@@ -13,6 +13,7 @@
 namespace izdebug {
 
 class Call;
+class Recorder;
 
 class SipApp : public QObject
 {
@@ -24,6 +25,12 @@ public:
     static void on_call_state(pjsua_call_id call_id, pjsip_event* ev);
 
     static void on_call_media_state(pjsua_call_id call_id);
+
+    static void on_stream_created(pjsua_call_id call_id,
+                                  pjmedia_stream *strm,
+                                  unsigned stream_idx,
+                                   pjmedia_port **p_port);
+
 
 
 public:
@@ -39,6 +46,7 @@ public slots:
 private:
 
     pjsua_acc_id m_acc_id;
+    Recorder* p_rec;
 
 };
 

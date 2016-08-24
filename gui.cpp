@@ -93,6 +93,7 @@ Gui::Gui(QWidget *parent)
         m_widget[1].button1.setText("Encode WAV");
         m_widget[1].button1.setMaximumSize(125, 25);
         m_widget[1].button1.setMinimumSize(125, 25);
+        m_widget[1].button1.setEnabled(false);
         m_widget[1].layout.addWidget(&m_widget[1].text, 0, Qt::AlignRight);
         m_widget[1].layout.addWidget(&m_widget[1].button1, 0, Qt::AlignRight);
 
@@ -104,11 +105,17 @@ Gui::Gui(QWidget *parent)
         m_widget[2].text.setEnabled(false);
 
         m_widget[2].button1.setText("Open WAV");
+        m_widget[2].button2.setText("Play file");
+
+
         m_widget[2].button1.setMaximumSize(125, 25);
         m_widget[2].button1.setMinimumSize(125, 25);
+        m_widget[2].button2.setMaximumSize(125, 25);
+        m_widget[2].button2.setMinimumSize(125, 25);
+
         m_widget[2].layout.addWidget(&m_widget[2].text, 0, Qt::AlignRight);
         m_widget[2].layout.addWidget(&m_widget[2].button1, 0, Qt::AlignRight);
-
+        m_widget[2].layout.addWidget(&m_widget[2].button2, 0, Qt::AlignRight);
     }
 
     m_rvbox.addLayout(&m_widget[0].layout);

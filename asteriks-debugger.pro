@@ -41,13 +41,19 @@ SOURCES += main.cpp \
     gui.cpp \
     pjsua-encdec.cpp \
     mem-pool.cpp \
-    sipapp.cpp
+    sipapp.cpp \
+    recorder.cpp \
+    confbridge.cpp \
+    mediaport.cpp
 
 HEADERS  += \
     gui.h \
     pjsua-encdec.h \
     mem-pool.h \
     sipapp.h \
-    defs.h
+    defs.h \
+    recorder.h \
+    confbridge.h \
+    mediaport.h
 
 FORMS    +=

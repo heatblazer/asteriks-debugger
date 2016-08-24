@@ -1,10 +1,13 @@
 #include "sipapp.h"
 
-// call //
-#include "call.h"
+// pjsua //
+#include <pjsua-lib/pjsua_internal.h>
 
 // C++ //
 #include <iostream>
+
+// recorder //
+#include "recorder.h"
 
 namespace izdebug {
 
@@ -25,9 +28,7 @@ void SipApp::on_call_state(pjsua_call_id call_id, pjsip_event *ev)
     (void) ev;
     pjsua_call_get_info(call_id, &info);
 
-
-    //emit hasMessage(m_message);
-
+    int i = 10;
 }
 
 void SipApp::on_call_media_state(pjsua_call_id call_id)
@@ -42,15 +43,36 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
 
 }
 
+void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
+                               unsigned stream_idx, pjmedia_port **p_port)
+{
+
+    std::cout << "Call id: " << call_id << std::endl;
+    pjsua_stream_info info;
+    pjsua_call_get_stream_info(call_id, stream_idx, &info);
+
+    pjmedia_transport_info tinfo;
+    pjsua_call_get_med_transport_info(call_id, stream_idx, &tinfo);
+
+    int i = 0xDEADCAFE;
+
+}
+
 
 
 SipApp::SipApp(QObject *parent)
-    : QObject(parent)
+    : QObject(parent),
+      p_rec(nullptr)
 {
+
 }
 
 SipApp::~SipApp()
 {
+    if (p_rec != nullptr) {
+        delete p_rec;
+        p_rec = nullptr;
+    }
     pjsua_destroy();
 }
 
@@ -74,6 +96,7 @@ bool SipApp::create(const QString &uri)
         cfg.cb.on_incoming_call = &SipApp::on_incomming_call;
         cfg.cb.on_call_media_state = &SipApp::on_call_media_state;
         cfg.cb.on_call_state = &SipApp::on_call_state;
+        cfg.cb.on_stream_created = &SipApp::on_stream_created;
 
         status = pjsua_init(&cfg, NULL, NULL);
 
@@ -119,6 +142,13 @@ bool SipApp::create(const QString &uri)
         if (status != PJ_SUCCESS) {
             return false;
         }
+
+    }
+
+    // create the dummy rec
+    {
+        p_rec = new Recorder;
+        p_rec->create("test.wav");
 
     }
 
