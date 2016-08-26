@@ -41,12 +41,14 @@ bool Thread::create(unsigned stack_size, const char *name, Thread::Prio prio, pj
         return false;
     }
 
+    m_isRunning = true;
+    return true;
+
 }
 
 void Thread::join()
 {
     pj_thread_join(p_thread);
-
 }
 
 } // namespace izdebug

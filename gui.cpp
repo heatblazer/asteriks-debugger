@@ -189,21 +189,20 @@ void Gui::hTextChange()
 
 void Gui::hClicked1()
 {
-    m_widget[0].button1.setDisabled(true);
-    call();
+
+    if (call()) {
+        m_widget[0].button1.setDisabled(true);
+    }
 
 }
 
 void Gui::hClicked2()
 {
     m_widget[0].button1.setDisabled(false);
-    Thread* t = new Thread;
-    t->create(0, NULL, Thread::Prio::MED,
-              Thread::testCb, this);
-    t->join();
+    p_sipApp->hupCall();
 }
 
-void Gui::call()
+bool Gui::call()
 {
     // send the string to sip!
     char* data = m_widget[0].text.toPlainText().toLatin1().data();
@@ -216,10 +215,12 @@ void Gui::call()
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
         emit sendUri(uri);
-        Gui::g_recorder.start();
-    } else {
-        std::cout << "ERROR IN DIGITS!" << std::endl;
+        //Gui::g_recorder.start();
+        Gui::g_recorder.start2();
+        return true;
     }
+    std::cout << "ERROR IN DIGITS!" << std::endl;
+    return false;
 }
 
 void Gui::hClear()

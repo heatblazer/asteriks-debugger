@@ -13,6 +13,40 @@
 
 namespace izdebug {
 
+int Recorder::entryPoint(void *user_data)
+{
+    Recorder* rec = (Recorder*) user_data;
+
+    if (!rec->m_isRecording) {
+        pj_status_t status = pjmedia_conf_connect_port(
+                    pjsua_var.mconf, 0, rec->m_slot, 0);
+        (void) status;
+
+        rec->m_isRecording = true;
+     }
+
+    pjmedia_frame frame;
+    pj_int16_t framebuf[640];
+    unsigned ms;
+    for(;;) {
+        if (!rec->m_isRecording) {
+            break; // skip all
+        }
+        pjmedia_port_get_frame(rec->p_port, &frame);
+
+        pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
+                          PJMEDIA_PIA_SPF(&rec->p_port->info));
+        int level = pjmedia_linear2ulaw(level32) ^ 0xFF;
+        for(int i=0; i < 100; ++i) {
+            ms = i * 1000 * PJMEDIA_PIA_SPF(&rec->p_port->info) /
+                PJMEDIA_PIA_SRATE(&rec->p_port->info);
+            printf("%03d.%03d\t%7d\t%7d\n",
+                   ms/1000, ms%1000, level, level32);
+        }
+        pj_thread_sleep(200);
+    }
+}
+
 Recorder::Recorder(QObject *parent)
     : QObject(parent),
       p_port(nullptr),
@@ -22,6 +56,7 @@ Recorder::Recorder(QObject *parent)
 {
 
     // all was ok ...
+
 }
 
 Recorder::~Recorder()
@@ -61,6 +96,7 @@ bool Recorder::create(const char *fname)
                 pjmedia_port_destroy(p_port);
                 return false;
             }
+
         }
         m_isOk = true;
     }
@@ -84,6 +120,7 @@ void Recorder::stop()
     if (m_isRecording) {
         _disconnect_and_remove();
         m_isRecording = false;
+
     }
 }
 
@@ -93,9 +130,16 @@ void Recorder::start()
     if (!m_isRecording) {
         pj_status_t status = pjmedia_conf_connect_port(
                     pjsua_var.mconf, 0, m_slot, 0);
-        (void)status;
+        (void) status;
+
         m_isRecording = true;
      }
+
+}
+
+void Recorder::start2()
+{
+    m_thread.create(0, NULL, Thread::Prio::MED, Recorder::entryPoint, this);
 
 }
 

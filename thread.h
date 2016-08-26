@@ -29,6 +29,7 @@ public:
 private:
     pj_thread_t*    p_thread;
     void*           p_data;
+    bool            m_isRunning;
 };
 
 } // namespace izdebug

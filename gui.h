@@ -78,7 +78,7 @@ private slots:
     void hLoadWav();
 
 private:
-    void call();
+    bool call();
     bool _isValidDigit(const char* str);
 
 private:
