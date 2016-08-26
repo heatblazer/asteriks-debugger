@@ -9,6 +9,9 @@ class Pool
 {
 public:
     static Pool& Instance();
+
+    void* zero_alloc(pj_size_t size);
+    void* alloc(pj_size_t size);
     pj_pool_t* toPjPool() const;
 
 private:

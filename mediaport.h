@@ -14,7 +14,7 @@ class ConfBridge;
 
 class MediaPort : public QObject
 {
-public:
+protected:
     explicit MediaPort(QObject* parent=nullptr);
     virtual ~MediaPort();
 

@@ -13,6 +13,16 @@ Pool &Pool::Instance()
     return *s_inst;
 }
 
+void *Pool::zero_alloc(pj_size_t size)
+{
+    return pj_pool_zalloc(p_pool, size);
+}
+
+void *Pool::alloc(pj_size_t size)
+{
+    return pj_pool_alloc(p_pool, size);
+}
+
 pj_pool_t *Pool::toPjPool() const
 {
     return p_pool;

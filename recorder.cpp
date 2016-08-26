@@ -13,65 +13,101 @@
 
 namespace izdebug {
 
-Recorder::Recorder()
-    : p_port(nullptr),
-      m_id(-1)
+Recorder::Recorder(QObject *parent)
+    : QObject(parent),
+      p_port(nullptr),
+      m_slot(0),
+      m_isOk(false),
+      m_isRecording(false)
 {
 
+    // all was ok ...
 }
 
 Recorder::~Recorder()
 {
-    pjmedia_port_destroy(p_port);
-    m_id = -1;
+    if (m_isOk) {
+        _disconnect_and_remove();
+    }
 }
 
-bool Recorder::create(const char *fname, bool is_stream)
+bool Recorder::create(const char *fname)
 {
-    pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);
-    if (conf != NULL) {
+    if (!m_isOk) {
+        pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);
 
-        pj_status_t status = pjmedia_wav_writer_port_create(
-                    Pool::Instance().toPjPool(), fname,
-                    PJMEDIA_PIA_SRATE(&conf->info),
-                    PJMEDIA_PIA_CCNT(&conf->info),
-                    PJMEDIA_PIA_SPF(&conf->info),
-                    PJMEDIA_PIA_BITS(&conf->info),
-                    0,
-                    0,
-                    &p_port);
+        if (conf == NULL) {
+            // no conf bridge? why?
+        }
+
+        pj_status_t status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
+                                       "caputre_pcma.wav",
+                                       PJMEDIA_PIA_SRATE(&conf->info),
+                                       PJMEDIA_PIA_CCNT(&conf->info),
+                                       PJMEDIA_PIA_SPF(&conf->info),
+                                       PJMEDIA_PIA_BITS(&conf->info),
+                                       0, 0,
+                                       &p_port);
 
         if (status != PJ_SUCCESS) {
             return false;
-        }
-
-
-        unsigned slot = 0;
-        status = pjmedia_conf_add_port(pjsua_var.mconf,
+        } else {
+            status = pjmedia_conf_add_port(pjsua_var.mconf,
                                        Pool::Instance().toPjPool(),
-                                       p_port, NULL, &slot);
-        if (status != PJ_SUCCESS) {
-            return false;
+                                       p_port,
+                                       NULL,
+                                       &m_slot);
+            if (status != PJ_SUCCESS) {
+                pjmedia_port_destroy(p_port);
+                return false;
+            }
         }
-
-        status = pjmedia_conf_connect_port(pjsua_var.mconf,
-                                           0, slot, 0);
-
-        status = pjmedia_conf_connect_port(pjsua_var.mconf,
-                                           slot, 0, 0);
-
-
-        // finaly return
-        return true;
+        m_isOk = true;
     }
 
     return false;
 }
+
+void Recorder::destroy()
+{
+    _disconnect_and_remove();
+}
+
 
 pjmedia_port *Recorder::pjPort()
 {
     return p_port;
 }
 
-} // namespace izdebug
+void Recorder::stop()
+{
+    if (m_isRecording) {
+        _disconnect_and_remove();
+        m_isRecording = false;
+    }
+}
 
+void Recorder::start()
+{
+    // start to record
+    if (!m_isRecording) {
+        pj_status_t status = pjmedia_conf_connect_port(
+                    pjsua_var.mconf, 0, m_slot, 0);
+        (void)status;
+        m_isRecording = true;
+     }
+
+}
+
+void Recorder::_disconnect_and_remove()
+{
+    pj_status_t status = pjmedia_conf_disconnect_port(pjsua_var.mconf,
+                                 0, m_slot);
+
+    if (status == PJ_SUCCESS) {
+        pjmedia_port_destroy(p_port);
+        m_isOk = false; // we can create it again
+    }
+}
+
+} // namespace izdebug

@@ -44,7 +44,8 @@ SOURCES += main.cpp \
     sipapp.cpp \
     recorder.cpp \
     confbridge.cpp \
-    mediaport.cpp
+    mediaport.cpp \
+    thread.cpp
 
 HEADERS  += \
     gui.h \
@@ -54,6 +55,7 @@ HEADERS  += \
     defs.h \
     recorder.h \
     confbridge.h \
-    mediaport.h
+    mediaport.h \
+    thread.h
 
 FORMS    +=

@@ -10,6 +10,7 @@
 // defs //
 #include "defs.h"
 
+
 namespace izdebug {
 
 class Call;
@@ -46,7 +47,6 @@ public slots:
 private:
 
     pjsua_acc_id m_acc_id;
-    Recorder* p_rec;
 
 };
 

@@ -17,28 +17,41 @@
 
 #include "defs.h"
 
+// independant recorder //
+#include "recorder.h"
+
 namespace izdebug {
 
 class Gui;
 class Console;
 class SipApp;
 
+
 // composite class for the Gui
 class Console : public QPlainTextEdit
 {
     Q_OBJECT
+public:
+    static Console& Instance();
 signals:
     void getData(const QByteArray& data);
+    void hasData(const QByteArray& data);
+
+
+public:
+    void putData(const QByteArray& data);
 
 private:
     explicit Console(QPlainTextEdit *parent=nullptr);
     virtual ~Console();
-    void putData(const QByteArray& data);
-
 
 private slots:
     void handeData(const QByteArray& data);
-    friend class Gui;
+
+private:
+    static Console* s_inst;
+    QByteArray   m_screen;
+//    friend class Gui;
 };
 
 
@@ -46,6 +59,9 @@ private slots:
 class Gui : public QWidget
 {
     Q_OBJECT
+public:
+    static Recorder g_recorder;
+
 public:
     explicit Gui(QWidget *parent=nullptr);
     virtual ~Gui();
@@ -56,11 +72,13 @@ signals:
 
 private slots:
     void hTextChange();
-    void hClicked();
+    void hClicked1();
+    void hClicked2();
     void hClear();
     void hLoadWav();
 
 private:
+    void call();
     bool _isValidDigit(const char* str);
 
 private:

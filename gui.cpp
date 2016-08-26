@@ -6,6 +6,8 @@
 // sip app //
 #include "sipapp.h"
 
+#include <QThread>
+#include "thread.h"
 
 /// aux function to determine strlen
 /// \brief aux_strlen
@@ -50,19 +52,21 @@ static void trim(char* data)
 namespace izdebug {
 
 
+Recorder Gui::g_recorder;
+
 Gui::Gui(QWidget *parent)
     : QWidget(parent)
 {
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
-        // fill in later OK
+        Gui::g_recorder.create("recfile.wav");
     } else {
         // maybe handle it
     }
 
 
     {
-        p_console = new Console();
+        p_console = &Console::Instance();
         m_lvbox.addWidget(p_console);
     }
 
@@ -134,14 +138,15 @@ Gui::Gui(QWidget *parent)
     {
         connect(&m_widget[0].text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()));
+        connect(&m_widget[0].button2, SIGNAL(clicked(bool)),
+                this, SLOT(hClicked2()));
         connect(&m_widget[0].button1, SIGNAL(clicked(bool)),
-                this, SLOT(hClicked()));
+                this, SLOT(hClicked1()));
         connect(this, SIGNAL(sendUri(const char*)),
                 p_sipApp, SLOT(makeACall(const char*)));
-        connect(&m_widget[0].button2, SIGNAL(clicked(bool)),
-                p_sipApp, SLOT(hupCall()));
 
-    }
+        // start and stop transimission
+     }
 
     // setup slots/signals of debug sound
     {
@@ -162,13 +167,14 @@ Gui::Gui(QWidget *parent)
         connect(&m_widget[2].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hLoadWav()));
     }
+
+
 }
 
 Gui::~Gui()
 {
     std::cout << "Gui destroyed" << std::endl;
     if (p_console != nullptr) {
-        delete p_console;
         p_console = nullptr;
     }
     if(p_sipApp != nullptr) {
@@ -181,7 +187,23 @@ void Gui::hTextChange()
 {
 }
 
-void Gui::hClicked()
+void Gui::hClicked1()
+{
+    m_widget[0].button1.setDisabled(true);
+    call();
+
+}
+
+void Gui::hClicked2()
+{
+    m_widget[0].button1.setDisabled(false);
+    Thread* t = new Thread;
+    t->create(0, NULL, Thread::Prio::MED,
+              Thread::testCb, this);
+    t->join();
+}
+
+void Gui::call()
 {
     // send the string to sip!
     char* data = m_widget[0].text.toPlainText().toLatin1().data();
@@ -193,9 +215,8 @@ void Gui::hClicked()
         // OK send to server
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
-        //emit sendData(QByteArray(m_widget[0].text.toPlainText().toLatin1().constData()));
-        //emit sendData(QByteArray(uri.toLatin1().constData()));
         emit sendUri(uri);
+        Gui::g_recorder.start();
     } else {
         std::cout << "ERROR IN DIGITS!" << std::endl;
     }
@@ -225,17 +246,29 @@ bool Gui::_isValidDigit(const char *str)
     return isOk;
 }
 
+
+Console* Console::s_inst = nullptr;
+
+Console &Console::Instance()
+{
+    if (s_inst == nullptr) {
+        s_inst = new Console;
+    }
+    return *s_inst;
+}
+
 Console::Console(QPlainTextEdit *parent)
     : QPlainTextEdit(parent)
 {
 
-    setEnabled(false);
+    setReadOnly(true);
     setMaximumSize(320, 460);
     setMinimumSize(320, 460);
     QPalette p = palette();
     p.setColor(QPalette::Base, Qt::black);
     p.setColor(QPalette::Text, Qt::green);
     setPalette(p);
+
     show();
 }
 
@@ -247,6 +280,7 @@ Console::~Console()
 void Console::putData(const QByteArray &data)
 {
     insertPlainText(QString(data));
+    emit hasData(data);
 
 }
 
@@ -257,5 +291,7 @@ void Console::handeData(const QByteArray &data)
     }
     // else do nothing
 }
+
+
 
 } // namespce izdebug
