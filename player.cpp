@@ -4,8 +4,9 @@
 
 namespace izdebug {
 
-Player::Player(QObject *parent)
-    : QObject(parent)
+Player::Player(const QString &fname, QObject *parent)
+    : MediaPort(parent),
+      m_fname(fname)
 {
 
 }
@@ -15,7 +16,12 @@ Player::~Player()
 
 }
 
-bool Player::create(const char *fname)
+bool Player::create()
+{
+    return _create(m_fname.toLatin1().constData());
+}
+
+bool Player::_create(const char *fname)
 {
 
 }

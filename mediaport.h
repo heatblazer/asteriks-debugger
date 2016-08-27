@@ -16,9 +16,9 @@ class MediaPort : public QObject
 {
 protected:
     explicit MediaPort(QObject* parent=nullptr);
-    virtual ~MediaPort();
+    virtual ~MediaPort()=0;
 
-    virtual bool create();
+    virtual bool create()=0;
 
 private:
     pjmedia_port* p_port;

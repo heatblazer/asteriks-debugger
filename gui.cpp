@@ -52,14 +52,14 @@ static void trim(char* data)
 namespace izdebug {
 
 
-Recorder Gui::g_recorder;
+Recorder Gui::g_recorder("test_rec1.wav");
 
 Gui::Gui(QWidget *parent)
     : QWidget(parent)
 {
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
-        Gui::g_recorder.create("recfile.wav");
+        Gui::g_recorder.create();
     } else {
         // maybe handle it
     }

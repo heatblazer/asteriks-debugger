@@ -47,12 +47,13 @@ int Recorder::entryPoint(void *user_data)
     }
 }
 
-Recorder::Recorder(QObject *parent)
-    : QObject(parent),
+Recorder::Recorder(const QString& fname, QObject *parent)
+    : MediaPort(parent),
       p_port(nullptr),
       m_slot(0),
       m_isOk(false),
-      m_isRecording(false)
+      m_isRecording(false),
+      m_fname(fname)
 {
 
     // all was ok ...
@@ -66,7 +67,12 @@ Recorder::~Recorder()
     }
 }
 
-bool Recorder::create(const char *fname)
+bool Recorder::create()
+{
+    return _create(m_fname.toLatin1().constData());
+}
+
+bool Recorder::_create(const char *fname)
 {
     if (!m_isOk) {
         pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);

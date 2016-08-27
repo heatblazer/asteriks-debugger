@@ -1,22 +1,24 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <QObject>
 
 // pjlib //
 #include <pjmedia.h>
 #include <pjlib.h>
 #include <pjsua.h>
 
+// parent //
+#include "mediaport.h"
+
 namespace izdebug {
 
-class Player : public QObject
+class Player : public MediaPort
 {
     Q_OBJECT
-    explicit Player(QObject* parent=nullptr);
+    explicit Player(const QString& fname, QObject* parent=nullptr);
     virtual ~Player();
 
-    bool create(const char* fname);
+    bool create();
     void destroy(void);
     pjmedia_port *pjPort();
 
@@ -26,13 +28,16 @@ public slots:
 
 private:
     void _disconnect_and_remove();
+    bool _create(const char* fname);
 
 private:
 
     pjmedia_port* p_port;
+    QString m_fname;
     unsigned m_slot;
     bool m_isOk;
     bool m_isPlaying;
+
 
 };
 
