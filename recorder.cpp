@@ -10,6 +10,8 @@
 // ansi C //
 #include <stdio.h>
 
+// console //
+#include "gui.h"
 
 namespace izdebug {
 
@@ -23,15 +25,19 @@ int Recorder::entryPoint(void *user_data)
         (void) status;
 
         rec->m_isRecording = true;
-     }
+     } else {
+        pjmedia_conf_disconnect_port(pjsua_var.mconf, 9, rec->m_slot);
+        rec->m_isRecording = false;
+    }
 
     pjmedia_frame frame;
-    pj_int16_t framebuf[640];
+    pj_int16_t framebuf[1];
     unsigned ms;
-    for(;;) {
-        if (!rec->m_isRecording) {
-            break; // skip all
+    {
+        if(!rec->m_isRecording) {
+
         }
+
         pjmedia_port_get_frame(rec->p_port, &frame);
 
         pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
@@ -40,10 +46,12 @@ int Recorder::entryPoint(void *user_data)
         for(int i=0; i < 100; ++i) {
             ms = i * 1000 * PJMEDIA_PIA_SPF(&rec->p_port->info) /
                 PJMEDIA_PIA_SRATE(&rec->p_port->info);
+            char txt[128]={0};
             printf("%03d.%03d\t%7d\t%7d\n",
                    ms/1000, ms%1000, level, level32);
+            //Console::Instance().putData(txt);
         }
-        pj_thread_sleep(200);
+
     }
 }
 
@@ -105,6 +113,9 @@ bool Recorder::_create(const char *fname)
 
         }
         m_isOk = true;
+        connect(this, SIGNAL(recording(bool)),
+                this, SLOT(hRec(bool)));
+        return true;
     }
 
     return false;
@@ -124,7 +135,7 @@ pjmedia_port *Recorder::pjPort()
 void Recorder::stop()
 {
     if (m_isRecording) {
-        _disconnect_and_remove();
+        //_disconnect_and_remove();
         m_isRecording = false;
 
     }
@@ -140,6 +151,7 @@ void Recorder::start()
 
         m_isRecording = true;
      }
+    emit recording(true);
 
 }
 
@@ -147,6 +159,39 @@ void Recorder::start2()
 {
     m_thread.create(0, NULL, Thread::Prio::MED, Recorder::entryPoint, this);
 
+}
+
+void Recorder::hRec(bool status)
+{
+    if (status) {
+        pj_status_t status1 = pjmedia_conf_connect_port(
+                    pjsua_var.mconf, 0, m_slot, 0);
+        (void) status;
+
+     } else {
+        pjmedia_conf_disconnect_port(pjsua_var.mconf, 0, m_slot);
+        return;
+    }
+
+    pjmedia_frame frame;
+    pj_int16_t framebuf[1];
+    unsigned ms;
+    {
+
+        pjmedia_port_get_frame(p_port, &frame);
+
+        pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
+                          PJMEDIA_PIA_SPF(&p_port->info));
+        int level = pjmedia_linear2ulaw(level32) ^ 0xFF;
+        for(int i=0; i < 100; ++i) {
+            ms = i * 1000 * PJMEDIA_PIA_SPF(&p_port->info) /
+                PJMEDIA_PIA_SRATE(&p_port->info);
+            char txt[128]={0};
+            printf("%03d.%03d\t%7d\t%7d\n",
+                   ms/1000, ms%1000, level, level32);
+            //Console::Instance().putData(txt);
+        }
+    }
 }
 
 void Recorder::_disconnect_and_remove()

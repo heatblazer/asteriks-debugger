@@ -17,7 +17,7 @@ namespace izdebug {
 // also debug the data
 class Recorder : public MediaPort
 {
-
+    Q_OBJECT
 public:
     static int entryPoint(void* user_data);
 
@@ -29,11 +29,15 @@ public:
 
 signals:
     void sendFrame(pjmedia_frame* frm);
+    void recording(bool);
 
 public slots:
     void stop();
     void start();
     void start2();
+
+private slots:
+    void hRec(bool status);
 
 private:
     void _disconnect_and_remove();

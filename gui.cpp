@@ -215,8 +215,8 @@ bool Gui::call()
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
         emit sendUri(uri);
-        //Gui::g_recorder.start();
-        Gui::g_recorder.start2();
+        Gui::g_recorder.start();
+        //Gui::g_recorder.start2();
         return true;
     }
     std::cout << "ERROR IN DIGITS!" << std::endl;
