@@ -15,16 +15,24 @@ namespace izdebug {
 class Player : public MediaPort
 {
     Q_OBJECT
+public:
     explicit Player(const QString& fname, QObject* parent=nullptr);
     virtual ~Player();
 
     bool create();
+    void setFile(const char* fname);
     void destroy(void);
     pjmedia_port *pjPort();
 
+signals:
+    void playing(bool play);
+
 public slots:
     void stop();
-    void start();
+    void play();
+
+private slots:
+    void hPlaying(bool s);
 
 private:
     void _disconnect_and_remove();
