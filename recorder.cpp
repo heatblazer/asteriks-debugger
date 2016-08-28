@@ -15,45 +15,6 @@
 
 namespace izdebug {
 
-int Recorder::entryPoint(void *user_data)
-{
-    Recorder* rec = (Recorder*) user_data;
-
-    if (!rec->m_isRecording) {
-        pj_status_t status = pjmedia_conf_connect_port(
-                    pjsua_var.mconf, 0, rec->m_slot, 0);
-        (void) status;
-
-        rec->m_isRecording = true;
-     } else {
-        pjmedia_conf_disconnect_port(pjsua_var.mconf, 9, rec->m_slot);
-        rec->m_isRecording = false;
-    }
-
-    pjmedia_frame frame;
-    pj_int16_t framebuf[1];
-    unsigned ms;
-    {
-        if(!rec->m_isRecording) {
-
-        }
-
-        pjmedia_port_get_frame(rec->p_port, &frame);
-
-        pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
-                          PJMEDIA_PIA_SPF(&rec->p_port->info));
-        int level = pjmedia_linear2ulaw(level32) ^ 0xFF;
-        for(int i=0; i < 100; ++i) {
-            ms = i * 1000 * PJMEDIA_PIA_SPF(&rec->p_port->info) /
-                PJMEDIA_PIA_SRATE(&rec->p_port->info);
-            char txt[128]={0};
-            printf("%03d.%03d\t%7d\t%7d\n",
-                   ms/1000, ms%1000, level, level32);
-            //Console::Instance().putData(txt);
-        }
-
-    }
-}
 
 Recorder::Recorder(const QString& fname, QObject *parent)
     : MediaPort(parent),
@@ -145,21 +106,13 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
-        pj_status_t status = pjmedia_conf_connect_port(
-                    pjsua_var.mconf, 0, m_slot, 0);
-        (void) status;
-
         m_isRecording = true;
      }
     emit recording(true);
 
 }
 
-void Recorder::start2()
-{
-    m_thread.create(0, NULL, Thread::Prio::MED, Recorder::entryPoint, this);
 
-}
 
 void Recorder::hRec(bool status)
 {
@@ -196,12 +149,14 @@ void Recorder::hRec(bool status)
 
 void Recorder::_disconnect_and_remove()
 {
-    pj_status_t status = pjmedia_conf_disconnect_port(pjsua_var.mconf,
-                                 0, m_slot);
+    if (m_isRecording && m_isOk) {
+        pj_status_t status = pjmedia_conf_disconnect_port(pjsua_var.mconf,
+                                     0, m_slot);
 
-    if (status == PJ_SUCCESS) {
-        pjmedia_port_destroy(p_port);
-        m_isOk = false; // we can create it again
+        if (status == PJ_SUCCESS) {
+            pjmedia_port_destroy(p_port);
+            m_isOk = false; // we can create it again
+        }
     }
 }
 

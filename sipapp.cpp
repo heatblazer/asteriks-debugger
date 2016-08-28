@@ -15,16 +15,6 @@
 // thread //
 #include "thread.h"
 
-static inline void lockStack(void)
-{
-    for(;;) {
-        // break here
-        int i = 0xDEADCAFE;
-        (void)i;
-    }
-}
-
-
 namespace izdebug {
 
 
@@ -58,72 +48,6 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
     }
 
 }
-
-#if 0
-typedef struct pjmedia_stream_info
-{
-    pjmedia_type	type;	    /**< Media type (audio, video)	    */
-    pjmedia_tp_proto	proto;	    /**< Transport protocol (RTP/AVP, etc.) */
-    pjmedia_dir		dir;	    /**< Media direction.		    */
-    pj_sockaddr		rem_addr;   /**< Remote RTP address		    */
-    pj_sockaddr		rem_rtcp;   /**< Optional remote RTCP address. If
-                     sin_family is zero, the RTP address
-                     will be calculated from RTP.	    */
-#if defined(PJMEDIA_HAS_RTCP_XR) && (PJMEDIA_HAS_RTCP_XR != 0)
-    pj_bool_t		rtcp_xr_enabled;
-                    /**< Specify whether RTCP XR is enabled.*/
-    pj_uint32_t		rtcp_xr_interval; /**< RTCP XR interval.            */
-    pj_sockaddr		rtcp_xr_dest;/**<Additional remote RTCP XR address.
-                         This is useful for third-party (e.g:
-                     network monitor) to monitor the
-                     stream. If sin_family is zero,
-                     this will be ignored.		    */
-#endif
-    pjmedia_codec_info	fmt;	    /**< Incoming codec format info.	    */
-    pjmedia_codec_param *param;	    /**< Optional codec param.		    */
-    unsigned		tx_pt;	    /**< Outgoing codec paylaod type.	    */
-    unsigned		rx_pt;	    /**< Incoming codec paylaod type.	    */
-    unsigned		tx_maxptime;/**< Outgoing codec max ptime.	    */
-    int		        tx_event_pt;/**< Outgoing pt for telephone-events.  */
-    int			rx_event_pt;/**< Incoming pt for telephone-events.  */
-    pj_uint32_t		ssrc;	    /**< RTP SSRC.			    */
-    pj_uint32_t		rtp_ts;	    /**< Initial RTP timestamp.		    */
-    pj_uint16_t		rtp_seq;    /**< Initial RTP sequence number.	    */
-    pj_uint8_t		rtp_seq_ts_set;
-                    /**< Bitmask flags if initial RTP sequence
-                         and/or timestamp for sender are set.
-                     bit 0/LSB : sequence flag
-                     bit 1     : timestamp flag 	    */
-    int			jb_init;    /**< Jitter buffer init delay in msec.
-                     (-1 for default).		    */
-    int			jb_min_pre; /**< Jitter buffer minimum prefetch
-                     delay in msec (-1 for default).    */
-    int			jb_max_pre; /**< Jitter buffer maximum prefetch
-                     delay in msec (-1 for default).    */
-    int			jb_max;	    /**< Jitter buffer max delay in msec.   */
-
-#if defined(PJMEDIA_STREAM_ENABLE_KA) && PJMEDIA_STREAM_ENABLE_KA!=0
-    pj_bool_t		use_ka;	    /**< Stream keep-alive and NAT hole punch
-                     (see #PJMEDIA_STREAM_ENABLE_KA)
-                     is enabled?			    */
-#endif
-    pj_bool_t           rtcp_sdes_bye_disabled;
-                                    /**< Disable automatic sending of RTCP
-                                         SDES and BYE.                      */
-} pjmedia_stream_info;
-
-typedef struct pjmedia_codec_info
-{
-    pjmedia_type    type;	    /**< Media type.			*/
-    unsigned	    pt;		    /**< Payload type (can be dynamic). */
-    pj_str_t	    encoding_name;  /**< Encoding name.			*/
-    unsigned	    clock_rate;	    /**< Sampling rate.			*/
-    unsigned	    channel_cnt;    /**< Channel count.			*/
-} pjmedia_codec_info;
-
-
-
-#endif
 
 void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
                                unsigned stream_idx, pjmedia_port **p_port)
@@ -162,14 +86,6 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
     Console::Instance().putData(QByteArray(con));
 
     // play PCMU to the port
-
-#if 0
-    pjsua_player_id player_id;
-    static pj_str_t str = pj_str("test_pcma16.wav");
-    pjsua_player_create(&str, 0, &player_id);
-    pjsua_player_get_port(player_id, &player_port);
-    pjsua_conf_connect(0, pjsua_player_get_conf_port(player_id));
-#endif
 
 }
 

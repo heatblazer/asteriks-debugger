@@ -34,7 +34,6 @@ signals:
 public slots:
     void stop();
     void start();
-    void start2();
 
 private slots:
     void hRec(bool status);
