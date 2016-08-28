@@ -53,6 +53,8 @@ namespace izdebug {
 
 
 Recorder Gui::g_recorder("test_rec1.wav");
+Player  Gui::g_player("test_pcma16.wav");
+
 
 Gui::Gui(QWidget *parent)
     : QWidget(parent)
@@ -60,6 +62,7 @@ Gui::Gui(QWidget *parent)
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
         Gui::g_recorder.create();
+        Gui::g_player.create();
     } else {
         // maybe handle it
     }
@@ -136,8 +139,6 @@ Gui::Gui(QWidget *parent)
 
     // setup slots / signals of dial box
     {
-        connect(&m_widget[0].text, SIGNAL(textChanged()),
-                this, SLOT(hTextChange()));
         connect(&m_widget[0].button2, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked2()));
         connect(&m_widget[0].button1, SIGNAL(clicked(bool)),
@@ -150,8 +151,6 @@ Gui::Gui(QWidget *parent)
 
     // setup slots/signals of debug sound
     {
-        connect(&m_widget[1].text, SIGNAL(textChanged()),
-                this, SLOT(hTextChange()));
         connect(&m_widget[1].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClear()));
 
@@ -159,13 +158,16 @@ Gui::Gui(QWidget *parent)
 
     // load WAV file
     {
+        connect(&m_widget[2].text, SIGNAL(textChanged()),
+                this, SLOT(hTextChange()), Qt::DirectConnection);
+
         connect(&m_fileBrowser, SIGNAL(fileSelected(QString)),
                 &m_widget[2].text, SLOT(append(QString)));
 
-        connect(&m_widget[2].text, SIGNAL(textChanged()),
-                this, SLOT(hTextChange()));
         connect(&m_widget[2].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hLoadWav()));
+        connect(&m_widget[2].button2, SIGNAL(clicked(bool)),
+                this, SLOT(playFile()));
     }
 
 
@@ -185,6 +187,7 @@ Gui::~Gui()
 
 void Gui::hTextChange()
 {
+    std::cout << m_widget[2].text.toPlainText().toStdString() << std::endl;
 }
 
 void Gui::hClicked1()
@@ -231,6 +234,18 @@ void Gui::hClear()
 void Gui::hLoadWav()
 {
     m_fileBrowser.show();
+}
+
+void Gui::playFile()
+{
+    std::cout << "Playing file..." << std::endl;
+    if (!m_widget[2].text.toPlainText().isEmpty()) {
+        std::cout << m_widget[2].text.toPlainText().toStdString() << "\n";
+        const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
+        Gui::g_player.setFile(s);
+        Gui::g_player.create();
+        Gui::g_player.play();
+    }
 }
 
 bool Gui::_isValidDigit(const char *str)

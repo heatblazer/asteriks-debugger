@@ -19,6 +19,8 @@
 
 // independant recorder //
 #include "recorder.h"
+// independant player
+#include "player.h"
 
 namespace izdebug {
 
@@ -61,6 +63,7 @@ class Gui : public QWidget
     Q_OBJECT
 public:
     static Recorder g_recorder;
+    static Player   g_player;
 
 public:
     explicit Gui(QWidget *parent=nullptr);
@@ -76,6 +79,7 @@ private slots:
     void hClicked2();
     void hClear();
     void hLoadWav();
+    void playFile();
 
 private:
     bool call();
