@@ -74,7 +74,7 @@ bool Recorder::_create(const char *fname)
 
         }
         m_isOk = true;
-        m_timer.setInterval(100);
+        m_timer.setInterval(1000);
         connect(this, SIGNAL(recording(bool)),
                 this, SLOT(hRec(bool)));
         connect(&m_timer, SIGNAL(timeout()),
@@ -150,9 +150,9 @@ void Recorder::hTimeout()
             ms = i * 1000 * PJMEDIA_PIA_SPF(&p_port->info) /
                 PJMEDIA_PIA_SRATE(&p_port->info);
             char txt[128]={0};
-            printf("%03d.%03d\t%7d\t%7d\n",
+            sprintf(txt, "%03d.%03d\t%7d\t%7d\n",
                    ms/1000, ms%1000, level, level32);
-            //Console::Instance().putData(txt);
+            Console::Instance().putData(txt);
         }
     }
 }
