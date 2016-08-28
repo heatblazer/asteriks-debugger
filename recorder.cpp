@@ -74,8 +74,11 @@ bool Recorder::_create(const char *fname)
 
         }
         m_isOk = true;
+        m_timer.setInterval(100);
         connect(this, SIGNAL(recording(bool)),
                 this, SLOT(hRec(bool)));
+        connect(&m_timer, SIGNAL(timeout()),
+                this, SLOT(hTimeout()), Qt::DirectConnection);
         return true;
     }
 
@@ -97,6 +100,7 @@ void Recorder::stop()
 {
     if (m_isRecording) {
         //_disconnect_and_remove();
+        m_timer.stop();
         m_isRecording = false;
 
     }
@@ -106,6 +110,7 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
+        m_timer.start();
         m_isRecording = true;
      }
     emit recording(true);
@@ -126,10 +131,15 @@ void Recorder::hRec(bool status)
         return;
     }
 
+
+}
+
+void Recorder::hTimeout()
+{
     pjmedia_frame frame;
     pj_int16_t framebuf[1];
     unsigned ms;
-    {
+    if(1){
 
         pjmedia_port_get_frame(p_port, &frame);
 

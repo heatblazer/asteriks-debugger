@@ -1,6 +1,9 @@
 #ifndef RECORDER_H
 #define RECORDER_H
 
+// qt //
+#include <QTimer>
+
 // pjlib //
 #include <pjmedia.h>
 #include <pjlib.h>
@@ -37,6 +40,7 @@ public slots:
 
 private slots:
     void hRec(bool status);
+    void hTimeout(void);
 
 private:
     void _disconnect_and_remove();
@@ -50,6 +54,7 @@ private:
     bool m_isRecording;
     QString m_fname;
     Thread m_thread;
+    QTimer m_timer;
 
 };
 
