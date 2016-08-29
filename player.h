@@ -1,6 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+// qt //
+#include <QTimer>
 
 // pjlib //
 #include <pjmedia.h>
@@ -33,6 +35,7 @@ public slots:
 
 private slots:
     void hPlaying(bool s);
+    void hTimeout();
 
 private:
     void _disconnect_and_remove();
@@ -42,6 +45,7 @@ private:
 
     pjmedia_port* p_port;
     QString m_fname;
+    QTimer  m_timer;
     unsigned m_slot;
     bool m_isOk;
     bool m_isPlaying;
