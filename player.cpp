@@ -10,7 +10,9 @@ namespace izdebug {
 
 Player::Player(const QString &fname, QObject *parent)
     : MediaPort(parent),
-      m_fname(fname)
+      m_fname(fname),
+      m_isOk(false),
+      m_isPlaying(false)
 {
 
 }
@@ -34,6 +36,7 @@ bool Player::_create(const char *fname)
 {
 
     pj_status_t status;
+    pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);
     status = pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
                                             fname,
                                             0,
@@ -104,7 +107,7 @@ void Player::hPlaying(bool s)
         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
                               p_port, NULL, &m_slot);
         pjmedia_conf_connect_port(pjsua_var.mconf, 0, m_slot, 0);
-        pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, 0, 0);
+//        pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, 0, 0);
 
     } else {
         pjmedia_conf_disconnect_port(pjsua_var.mconf, 0, m_slot);
@@ -134,7 +137,6 @@ void Player::hTimeout()
             Console::Instance().putData(txt);
         }
     }
-
 }
 
 
