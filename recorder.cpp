@@ -19,10 +19,12 @@ namespace izdebug {
 Recorder::Recorder(const QString& fname, QObject *parent)
     : MediaPort(parent),
       p_port(nullptr),
+      p_sndPort(nullptr),
       m_slot(0),
       m_isOk(false),
       m_isRecording(false),
-      m_fname(fname)
+      m_fname(fname),
+      m_samples(0)
 {
 
     // all was ok ...
@@ -46,9 +48,21 @@ bool Recorder::_create(const char *fname)
     if (!m_isOk) {
         pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);
 
+        m_samples = PJMEDIA_PIA_SPF(&conf->info);
+
         if (conf == NULL) {
             // no conf bridge? why?
         }
+
+        pjmedia_snd_port_create_rec(Pool::Instance().toPjPool(),
+                                    -1,
+                                    PJMEDIA_PIA_SRATE(&conf->info),
+                                    PJMEDIA_PIA_CCNT(&conf->info),
+                                    PJMEDIA_PIA_SPF(&conf->info),
+                                    PJMEDIA_PIA_BITS(&conf->info),
+                                    0,
+                                    &p_sndPort);
+
 
         pj_status_t status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
                                        "caputre_pcma.wav",
@@ -62,6 +76,7 @@ bool Recorder::_create(const char *fname)
         if (status != PJ_SUCCESS) {
             return false;
         } else {
+            pjmedia_snd_port_connect(p_sndPort, p_port);
             status = pjmedia_conf_add_port(pjsua_var.mconf,
                                        Pool::Instance().toPjPool(),
                                        p_port,
@@ -122,9 +137,11 @@ void Recorder::start()
 void Recorder::hRec(bool status)
 {
     if (status) {
-        pj_status_t status1 = pjmedia_conf_connect_port(
-                    pjsua_var.mconf, 0, m_slot, 0);
-        (void) status;
+        pj_status_t s1 = pjmedia_conf_connect_port(pjsua_var.mconf, 0, m_slot, 0);
+        pj_status_t s2 = pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, 0, 0);
+        if (s1 == PJ_SUCCESS && s2 == PJ_SUCCESS) {
+            //
+        }
 
      } else {
         pjmedia_conf_disconnect_port(pjsua_var.mconf, 0, m_slot);
@@ -139,26 +156,38 @@ void Recorder::hRec(bool status)
 void Recorder::hTimeout()
 {
     pjmedia_frame frame;
-    pj_int16_t framebuf[1];
+    pj_int16_t framebuf[m_samples];
     unsigned ms;
-    unsigned tx, rx;
-    pjmedia_conf_get_signal_level(pjsua_var.mconf, m_slot, &tx, &rx);
-    char txt[32]={0};
-    sprintf(txt, "tx:[%d]\trx[%d]\n", tx, rx);
-    Console::Instance().putData(txt);
+
     if(1){
 
         pjmedia_port_get_frame(p_port, &frame);
 
-        pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
+        union {
+            pj_int32_t i;
+            char c[sizeof(pj_int32_t)];
+        } level32;
+        level32.i = pjmedia_calc_avg_signal(framebuf,
                           PJMEDIA_PIA_SPF(&p_port->info));
-        int level = pjmedia_linear2ulaw(level32) ^ 0xFF;
+        union {
+            int i;
+            char c[sizeof(int)];
+        } level;
+
+        level.i = pjmedia_linear2ulaw(level32.i) ^ 0xFF;
+        unsigned tx, rx;
+        pjmedia_conf_get_signal_level(pjsua_var.mconf, m_slot, &tx, &rx);
+        char txt[32]={0};
+        sprintf(txt, "tx:[%d]\trx[%d]\n", tx, rx);
+        Console::Instance().putData(txt);
+
+
         for(int i=0; i < 8; ++i) {
             ms = i * 1000 * PJMEDIA_PIA_SPF(&p_port->info) /
                 PJMEDIA_PIA_SRATE(&p_port->info);
             char txt[128]={0};
             sprintf(txt, "%03d.%03d\t%7d\t%7d\n",
-                   ms/1000, ms%1000, level, level32);
+                   ms/1000, ms%1000, level.i, level32.i);
             Console::Instance().putData(txt);
         }
     }

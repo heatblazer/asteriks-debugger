@@ -49,12 +49,14 @@ private:
 
 private:
     pjmedia_port* p_port;
+    pjmedia_snd_port* p_sndPort;
     unsigned m_slot;
     bool m_isOk;
     bool m_isRecording;
     QString m_fname;
     Thread m_thread;
     QTimer m_timer;
+    int m_samples;
 
 };
 
