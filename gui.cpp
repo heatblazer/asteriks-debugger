@@ -62,7 +62,7 @@ Gui::Gui(QWidget *parent)
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
         Gui::g_recorder.create();
-        Gui::g_player.create();
+        //Gui::g_player.create();
     } else {
         // maybe handle it
     }
@@ -97,6 +97,10 @@ Gui::Gui(QWidget *parent)
     {
         m_widget[1].text.setMinimumSize(200, 25);
         m_widget[1].text.setMaximumSize(200, 25);
+        m_widget[1].text.setPlainText("UNUSED FOR NOW");
+        m_widget[1].text.setEnabled(false);
+
+
         m_widget[1].button1.setText("Encode WAV");
         m_widget[1].button1.setMaximumSize(125, 25);
         m_widget[1].button1.setMinimumSize(125, 25);
@@ -107,22 +111,29 @@ Gui::Gui(QWidget *parent)
     }
 
     {
+        // extra button to stop
         m_widget[2].text.setMinimumSize(200, 25);
         m_widget[2].text.setMaximumSize(200, 25);
         m_widget[2].text.setEnabled(false);
 
         m_widget[2].button1.setText("Open WAV");
         m_widget[2].button2.setText("Play file");
+        m_widget[2].button3.setText("Stop WAV");
 
 
         m_widget[2].button1.setMaximumSize(125, 25);
         m_widget[2].button1.setMinimumSize(125, 25);
         m_widget[2].button2.setMaximumSize(125, 25);
         m_widget[2].button2.setMinimumSize(125, 25);
+        m_widget[2].button3.setMaximumSize(125, 25);
+        m_widget[2].button3.setMinimumSize(125, 25);
+
 
         m_widget[2].layout.addWidget(&m_widget[2].text, 0, Qt::AlignRight);
         m_widget[2].layout.addWidget(&m_widget[2].button1, 0, Qt::AlignRight);
         m_widget[2].layout.addWidget(&m_widget[2].button2, 0, Qt::AlignRight);
+        m_widget[2].layout.addWidget(&m_widget[2].button3, 0, Qt::AlignRight);
+
     }
 
     m_rvbox.addLayout(&m_widget[0].layout);
@@ -168,6 +179,8 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(hLoadWav()));
         connect(&m_widget[2].button2, SIGNAL(clicked(bool)),
                 this, SLOT(playFile()));
+        connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
+                this, SLOT(stopPlayer()));
     }
 
 
@@ -242,10 +255,17 @@ void Gui::playFile()
     if (!m_widget[2].text.toPlainText().isEmpty()) {
         std::cout << m_widget[2].text.toPlainText().toStdString() << "\n";
         const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
-        Gui::g_player.setFile(s);
-        Gui::g_player.create();
-        Gui::g_player.play();
+        if(Gui::g_player.create()) {
+            Gui::g_player.setFile(s);
+            Gui::g_player.play();
+        }
     }
+}
+
+void Gui::stopPlayer()
+{
+    std::cout << "Stopping player... " << std::endl;
+    Gui::g_player.stop();
 }
 
 bool Gui::_isValidDigit(const char *str)

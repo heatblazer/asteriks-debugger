@@ -80,6 +80,7 @@ private slots:
     void hClear();
     void hLoadWav();
     void playFile();
+    void stopPlayer();
 
 private:
     bool call();
@@ -94,6 +95,7 @@ private:
         QTextEdit   text;
         QPushButton button1;
         QPushButton button2;
+        QPushButton button3; // for stop player for now
         QVBoxLayout layout;
     } m_widget[3];
 
