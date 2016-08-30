@@ -304,6 +304,9 @@ Console::Console(QPlainTextEdit *parent)
     p.setColor(QPalette::Base, Qt::black);
     p.setColor(QPalette::Text, Qt::green);
     setPalette(p);
+    connect(this, SIGNAL(textChanged()),
+            this, SLOT(hTextChange()));
+
 
     show();
 }
@@ -326,6 +329,13 @@ void Console::handeData(const QByteArray &data)
         putData(data);
     }
     // else do nothing
+}
+
+void Console::hTextChange()
+{
+    QTextCursor c(this->textCursor());
+    c.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
+    this->setTextCursor(c);
 }
 
 

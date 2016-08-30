@@ -49,6 +49,7 @@ private:
 
 private slots:
     void handeData(const QByteArray& data);
+    void hTextChange();
 
 private:
     static Console* s_inst;
