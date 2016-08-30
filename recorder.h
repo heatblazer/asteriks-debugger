@@ -23,6 +23,7 @@ class Recorder : public MediaPort
     Q_OBJECT
 public:
     static int entryPoint(void* user_data);
+    static int latency(void* usr);
 
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
     virtual ~Recorder();
@@ -41,6 +42,7 @@ public slots:
 private slots:
     void hRec(bool status);
     void hTimeout(void);
+    void hTimeout2(void);
 
 private:
     void _disconnect_and_remove();
