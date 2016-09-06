@@ -14,6 +14,8 @@
 #include <QPushButton>
 #include <QPlainTextEdit>
 #include <QFileDialog>
+#include <QProgressBar>
+#include <QLabel>
 
 #include "defs.h"
 
@@ -67,6 +69,8 @@ public:
     static Player   g_player;
 
 public:
+    static void myLog(int level, const char* data, int len);
+
     explicit Gui(QWidget *parent=nullptr);
     virtual ~Gui();
 
@@ -82,6 +86,9 @@ private slots:
     void hLoadWav();
     void playFile();
     void stopPlayer();
+    void updateVuMeterTx();
+    void updateVuMeterRx();
+
 
 private:
     bool call();
@@ -91,6 +98,7 @@ private:
     QHBoxLayout m_hbox;
     QVBoxLayout m_lvbox;
     QVBoxLayout m_rvbox;
+    QVBoxLayout m_midbox;
 
     struct {
         QTextEdit   text;
@@ -99,6 +107,17 @@ private:
         QPushButton button3; // for stop player for now
         QVBoxLayout layout;
     } m_widget[3];
+
+
+    struct {
+        QLabel      label[2];
+        QProgressBar progressBar[2];
+        QHBoxLayout layout;
+        QVBoxLayout ly[2];
+        QSpacerItem* spacer;
+        QTimer test[2];
+
+    } m_vuMeter;
 
     Console*     p_console;
     QFileDialog m_fileBrowser;

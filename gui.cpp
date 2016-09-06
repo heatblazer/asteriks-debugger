@@ -9,6 +9,16 @@
 #include <QThread>
 #include "thread.h"
 
+
+
+#include <pjlib-util/cli.h>
+#include <pjlib-util/cli_imp.h>
+#include <pjlib-util/cli_console.h>
+#include <pjlib-util/cli_telnet.h>
+#include <pjlib-util/errno.h>
+#include <pjlib.h>
+
+
 /// aux function to determine strlen
 /// \brief aux_strlen
 /// \param data
@@ -74,8 +84,8 @@ Gui::Gui(QWidget *parent)
     }
 
 
-    setMinimumSize(QSize(640 , 480));
-    setMaximumSize(QSize(640, 480));
+    setMinimumSize(QSize(1024 , 480));
+    setMaximumSize(QSize(1024, 480));
     // setup widget for dialing
     {
         m_widget[0].text.setMinimumSize(200, 25);
@@ -135,15 +145,38 @@ Gui::Gui(QWidget *parent)
         m_widget[2].layout.addWidget(&m_widget[2].button3, 0, Qt::AlignRight);
 
     }
+    // vu meter connect to the higheest signal
+    {
+        m_vuMeter.spacer = new QSpacerItem(60, 10);
+        m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
+
+        m_vuMeter.label[0].setText("VU METER (TX)");
+        m_vuMeter.progressBar[0].setMinimumSize(50, 300);
+        m_vuMeter.progressBar[0].setMaximumSize(50, 300);
+        m_vuMeter.progressBar[0].setOrientation(Qt::Vertical);
+        m_vuMeter.ly[0].addWidget(&m_vuMeter.label[0]);
+        m_vuMeter.ly[0].addWidget(&m_vuMeter.progressBar[0]);
+
+        m_vuMeter.label[1].setText("VU METER (RX)");
+        m_vuMeter.progressBar[1].setMinimumSize(50, 300);
+        m_vuMeter.progressBar[1].setMaximumSize(50, 300);
+        m_vuMeter.progressBar[1].setOrientation(Qt::Vertical);
+        m_vuMeter.ly[1].addWidget(&m_vuMeter.label[1]);
+        m_vuMeter.ly[1].addWidget(&m_vuMeter.progressBar[1]);
+
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[0]);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[1]);
+    }
 
     m_rvbox.addLayout(&m_widget[0].layout);
     m_rvbox.addLayout(&m_widget[1].layout);
     m_rvbox.addLayout(&m_widget[2].layout);
-
+    m_midbox.addLayout(&m_vuMeter.layout);
 
     m_lvbox.addWidget(p_console, 0, Qt::AlignLeft);
 
     m_hbox.addLayout(&m_lvbox);
+    m_hbox.addLayout(&m_midbox);
     m_hbox.addLayout(&m_rvbox);
 
     setLayout(&m_hbox);
@@ -183,6 +216,24 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(stopPlayer()));
     }
 
+    // vu meter connections
+    {
+        m_vuMeter.test[0].setInterval(500);
+        m_vuMeter.test[1].setInterval(200);
+
+        connect(&m_vuMeter.test[0], SIGNAL(timeout()),
+                this, SLOT(updateVuMeterRx()));
+        connect(&m_vuMeter.test[1], SIGNAL(timeout()),
+                this, SLOT(updateVuMeterTx()));
+
+        m_vuMeter.test[0].start();
+        m_vuMeter.test[1].start();
+
+
+    }
+
+
+    pj_log_set_log_func(myLog);
 
 }
 
@@ -268,6 +319,30 @@ void Gui::stopPlayer()
     Gui::g_player.stop();
 }
 
+void Gui::updateVuMeterTx()
+{
+    static int a = 0;
+    if (a > 100) {
+        a = 0;
+    } else {
+        a+=10;
+    }
+    m_vuMeter.progressBar[0].setValue(a);
+}
+
+void Gui::updateVuMeterRx()
+{
+    static int a = 0;
+    if (a > 100) {
+        a = 0;
+    } else {
+        a+=10;
+    }
+
+    m_vuMeter.progressBar[1].setValue(a);
+}
+
+
 bool Gui::_isValidDigit(const char *str)
 {
     bool isOk = true;
@@ -280,6 +355,10 @@ bool Gui::_isValidDigit(const char *str)
         tmp++;
     }
     return isOk;
+}
+
+void Gui::myLog(int level, const char *data, int len)
+{
 }
 
 
