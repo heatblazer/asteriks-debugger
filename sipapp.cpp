@@ -15,6 +15,7 @@
 // thread //
 #include "thread.h"
 
+
 namespace izdebug {
 
 
@@ -86,6 +87,8 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
     Console::Instance().putData(QByteArray(con));
 
     // play PCMU to the port
+
+
 
 }
 
@@ -172,6 +175,7 @@ bool SipApp::create(const QString &uri)
         }
 
     }
+
 
     return true;
 }

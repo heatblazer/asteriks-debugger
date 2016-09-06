@@ -82,8 +82,8 @@ int Recorder::latency(void *usr)
 
             lat = (max_echo_pos - max_signal_pos) * 1000 / PJMEDIA_PIA_SRATE(&p_port->info);
             char txt[64]={0};
-            printf( "Latency = %u\n", lat);
-       //     Console::Instance().putData(txt);
+            sprintf(txt, "Latency = %u\n", lat);
+            Console::Instance().putData(txt);
 
             lat_sum += lat;
             lat_cnt++;
@@ -101,12 +101,12 @@ int Recorder::latency(void *usr)
 
         char txt[256]={0};
 
-        printf( "Latency avg = %u\n"
+        sprintf(txt, "Latency avg = %u\n"
                 "Latency minimum = %u\n"
                 "Latency maximum = %u\n"
                 "Number of data = %u\n",
                 lat_sum/lat_cnt, lat_min, lat_max, lat_cnt);
-    //    Console::Instance().putData(txt);
+        Console::Instance().putData(txt);
     }
 
 }
@@ -209,7 +209,7 @@ void Recorder::stop()
 {
     if (m_isRecording) {
         //_disconnect_and_remove();
-        //m_timer.stop();
+        m_timer.stop();
 
         m_isRecording = false;
     }
@@ -290,8 +290,13 @@ void Recorder::hTimeout()
     }
 }
 
+
 void Recorder::hTimeout2()
 {
+    DELETEME:
+    {
+
+    }
 
     pjmedia_frame frame;
     //pjmedia_port* p_port = pjmedia_conf_get_master_port(pjsua_var.mconf);
@@ -350,8 +355,8 @@ void Recorder::hTimeout2()
 
         lat = (max_echo_pos - max_signal_pos) * 1000 / PJMEDIA_PIA_SRATE(&p_port->info);
         char txt[64]={0};
-        printf( "Latency = %u\n", lat);
-   //     Console::Instance().putData(txt);
+        sprintf(txt, "Latency = %u\n", lat);
+        Console::Instance().putData(txt);
 
         lat_sum += lat;
         lat_cnt++;
@@ -369,12 +374,12 @@ void Recorder::hTimeout2()
 
     char txt[256]={0};
 
-    printf( "Latency avg = %u\n"
+    sprintf(txt, "Latency avg = %u\n"
             "Latency minimum = %u\n"
             "Latency maximum = %u\n"
             "Number of data = %u\n",
             lat_sum/lat_cnt, lat_min, lat_max, lat_cnt);
-//    Console::Instance().putData(txt);
+    Console::Instance().putData(txt);
 
 }
 
