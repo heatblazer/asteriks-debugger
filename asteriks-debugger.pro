@@ -34,8 +34,7 @@ LIBS += -lpjsua2-x86_64-unknown-linux-gnu \
     -lssl \
     -lcrypto \
     -luuid \
-    -lasound \
-
+    -lasound
 
 SOURCES += main.cpp \
     gui.cpp \

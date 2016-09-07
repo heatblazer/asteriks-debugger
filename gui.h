@@ -29,7 +29,7 @@ namespace izdebug {
 class Gui;
 class Console;
 class SipApp;
-
+class Ruler;
 
 // composite class for the Gui
 class Console : public QPlainTextEdit
@@ -109,12 +109,15 @@ private:
     } m_widget[3];
 
 
+    // implement vu logic
     struct {
         QLabel      label[2];
         QProgressBar progressBar[2];
         QHBoxLayout layout;
-        QVBoxLayout ly[2];
+        QVBoxLayout ly[4];
         QSpacerItem* spacer;
+        Ruler*         rulertx;
+        Ruler*         rulerrx;
         QTimer test[2];
 
     } m_vuMeter;
@@ -124,6 +127,22 @@ private:
     SipApp*     p_sipApp;
 
 };
+
+class Ruler : public QWidget
+{
+    // no emitters
+public:
+    explicit Ruler(QWidget* parent=nullptr);
+    virtual ~Ruler();
+
+    // overide
+    void paintEvent(QPaintEvent *event);//
+
+
+private:
+    QPoint  m_position;
+};
+
 
 } // namespace izdebug
 

@@ -1,5 +1,8 @@
 #include "gui.h"
 
+// qt headers //
+#include <QPainter>
+
 // test only //
 #include <iostream>
 
@@ -147,25 +150,42 @@ Gui::Gui(QWidget *parent)
     }
     // vu meter connect to the higheest signal
     {
+
+
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
         m_vuMeter.label[0].setText("VU METER (TX)");
         m_vuMeter.progressBar[0].setMinimumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximumSize(50, 300);
+        m_vuMeter.progressBar[0].setMaximum(300);
+        m_vuMeter.progressBar[0].setTextVisible(true);
+        m_vuMeter.progressBar[1].setTextVisible(true);
+
         m_vuMeter.progressBar[0].setOrientation(Qt::Vertical);
         m_vuMeter.ly[0].addWidget(&m_vuMeter.label[0]);
         m_vuMeter.ly[0].addWidget(&m_vuMeter.progressBar[0]);
 
+        m_vuMeter.rulertx = new Ruler(this);
+        m_vuMeter.ly[2].addWidget(m_vuMeter.rulertx);
+        m_vuMeter.rulerrx = new Ruler(this);
+        m_vuMeter.ly[3].addWidget(m_vuMeter.rulerrx);
+
+
         m_vuMeter.label[1].setText("VU METER (RX)");
         m_vuMeter.progressBar[1].setMinimumSize(50, 300);
         m_vuMeter.progressBar[1].setMaximumSize(50, 300);
+        m_vuMeter.progressBar[1].setMaximum(300);
+
         m_vuMeter.progressBar[1].setOrientation(Qt::Vertical);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.label[1]);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.progressBar[1]);
 
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[0]);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[2]);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[1]);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[3]);
+
     }
 
     m_rvbox.addLayout(&m_widget[0].layout);
@@ -218,8 +238,8 @@ Gui::Gui(QWidget *parent)
 
     // vu meter connections
     {
-        m_vuMeter.test[0].setInterval(500);
-        m_vuMeter.test[1].setInterval(200);
+        m_vuMeter.test[0].setInterval(200);
+        m_vuMeter.test[1].setInterval(500);
 
         connect(&m_vuMeter.test[0], SIGNAL(timeout()),
                 this, SLOT(updateVuMeterRx()));
@@ -322,10 +342,12 @@ void Gui::stopPlayer()
 void Gui::updateVuMeterTx()
 {
     static int a = 0;
-    if (a > 100) {
+    static const int limit = 300;
+
+    if (a > limit) {
         a = 0;
     } else {
-        a+=10;
+        a+=20;
     }
     m_vuMeter.progressBar[0].setValue(a);
 }
@@ -333,10 +355,11 @@ void Gui::updateVuMeterTx()
 void Gui::updateVuMeterRx()
 {
     static int a = 0;
-    if (a > 100) {
+    static const int limit = m_vuMeter.progressBar[0].geometry().height();
+    if (a > limit ) {
         a = 0;
     } else {
-        a+=10;
+        a+= 20;
     }
 
     m_vuMeter.progressBar[1].setValue(a);
@@ -417,6 +440,34 @@ void Console::hTextChange()
     this->setTextCursor(c);
 }
 
+Ruler::Ruler(QWidget *parent)
+    : QWidget(parent)
+{
 
+    setMinimumSize(QSize(60 , 480));
+    m_position.setX(0);
+    m_position.setY(480);
+
+}
+
+Ruler::~Ruler()
+{
+
+}
+
+void Ruler::paintEvent(QPaintEvent *event)
+{
+    QPainter pnt(this);
+
+    int step = 45;
+    for(int i=0; i < 15; i++) {
+        pnt.setPen(QColor(255, 0, 0));
+        pnt.drawRect(QRect(0, m_position.y()-step, 20, 20));
+        pnt.setPen(QColor(0,0,255));
+        pnt.drawText(QRect(5, m_position.y()-step, 20, 20),
+                     QString(QString::number(i)));
+        step+= 20;
+    }
+}
 
 } // namespce izdebug
