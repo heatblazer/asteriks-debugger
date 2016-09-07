@@ -186,8 +186,10 @@ bool Recorder::_create(const char *fname)
         m_timer.setInterval(1000);
         connect(this, SIGNAL(recording(bool)),
                 this, SLOT(hRec(bool)));
+#error
+        // connect here to VU analyzer
         connect(&m_timer, SIGNAL(timeout()),
-                this, SLOT(hTimeout2()), Qt::DirectConnection);
+                this, SLOT(hTimeout()), Qt::DirectConnection);
         return true;
     }
 

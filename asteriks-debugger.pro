@@ -58,6 +58,7 @@ HEADERS  += \
     confbridge.h \
     mediaport.h \
     thread.h \
-    player.h
+    player.h \
+    vu-meter.h
 
 FORMS    +=
