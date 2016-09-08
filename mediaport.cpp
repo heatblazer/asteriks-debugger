@@ -4,15 +4,38 @@
 
 namespace izdebug {
 
-bool MediaPort::create()
+
+MediaPort::MediaPort(QObject *parent)
+    : QObject(parent),
+      p_port(nullptr),
+      m_slot(0),
+      m_sink(0),
+      m_isOk(false)
 {
 
 }
 
-MediaPort::MediaPort(QObject *parent)
-    : QObject(parent)
-{
 
+bool MediaPort::isAdded()
+{
+    return m_isAdded;
+
+}
+
+unsigned MediaPort::getSlot()
+{
+    return m_slot;
+
+}
+
+unsigned MediaPort::getSink()
+{
+    return m_sink;
+}
+
+void MediaPort::setSink(unsigned sink)
+{
+    m_sink = sink;
 }
 
 MediaPort::~MediaPort()

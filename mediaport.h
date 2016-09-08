@@ -14,15 +14,25 @@ class ConfBridge;
 
 class MediaPort : public QObject
 {
+public:
+    virtual bool create()=0;
+    virtual bool isAdded();
+    virtual unsigned getSlot();
+    virtual void setSink(unsigned sink);
+    virtual unsigned getSink();
+
 protected:
     explicit MediaPort(QObject* parent=nullptr);
     virtual ~MediaPort()=0;
 
-    virtual bool create()=0;
 
-private:
+
+protected:
     pjmedia_port* p_port;
     unsigned      m_slot;
+    unsigned      m_sink;
+    bool m_isOk;
+    bool m_isAdded;
 
     friend class ConfBridge;
 };
