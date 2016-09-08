@@ -11,8 +11,6 @@
 
 // parent //
 #include "mediaport.h"
-// thr //
-#include "thread.h"
 
 namespace izdebug {
 
@@ -34,6 +32,7 @@ public:
 signals:
     void sendFrame(pjmedia_frame* frm);
     void recording(bool);
+    void sendRxTx(unsigned tx, unsigned rx);
 
 public slots:
     void stop();
@@ -43,6 +42,7 @@ private slots:
     void hRec(bool status);
     void hTimeout(void);
     void hTimeout2(void);
+    void hTimeout3(void);
 
 private:
     void _disconnect_and_remove();
@@ -50,13 +50,10 @@ private:
 
 
 private:
-    pjmedia_port* p_port;
     pjmedia_snd_port* p_sndPort;
     unsigned m_slot;
-    bool m_isOk;
     bool m_isRecording;
     QString m_fname;
-    Thread m_thread;
     QTimer m_timer;
     int m_samples;
 

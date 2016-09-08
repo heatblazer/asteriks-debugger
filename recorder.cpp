@@ -113,10 +113,8 @@ int Recorder::latency(void *usr)
 
 Recorder::Recorder(const QString& fname, QObject *parent)
     : MediaPort(parent),
-      p_port(nullptr),
       p_sndPort(nullptr),
       m_slot(0),
-      m_isOk(false),
       m_isRecording(false),
       m_fname(fname),
       m_samples(0)
@@ -183,13 +181,16 @@ bool Recorder::_create(const char *fname)
 
         }
         m_isOk = true;
-        m_timer.setInterval(1000);
+        m_timer.setInterval(200);
         connect(this, SIGNAL(recording(bool)),
                 this, SLOT(hRec(bool)));
 //#error
         // connect here to VU analyzer
         connect(&m_timer, SIGNAL(timeout()),
                 this, SLOT(hTimeout()), Qt::DirectConnection);
+
+        connect(&m_timer, SIGNAL(timeout()),
+                this, SLOT(hTimeout3()), Qt::DirectConnection);
         return true;
     }
 
@@ -224,7 +225,6 @@ void Recorder::start()
     if (!m_isRecording) {
         m_timer.start();
         m_isRecording = true;
-        //m_thread.create(0, NULL, Thread::MED, Recorder::latency, this);
 
      }
     emit recording(true);
@@ -237,15 +237,10 @@ void Recorder::hRec(bool status)
 {
     if (status) {
         pj_status_t s1 = pjmedia_conf_connect_port(pjsua_var.mconf, 0, m_slot, 0);
-   //     pj_status_t s2 = pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, 0, 0);
-        if (s1 == PJ_SUCCESS) {
-            //
-        }
+        (void)s1;
 
      } else {
         pjmedia_conf_disconnect_port(pjsua_var.mconf, 0, m_slot);
-     //   pjmedia_conf_disconnect_port(pjsua_var.mconf, m_slot, 0);
-
         return;
     }
 
@@ -383,6 +378,40 @@ void Recorder::hTimeout2()
             lat_sum/lat_cnt, lat_min, lat_max, lat_cnt);
     Console::Instance().putData(txt);
 
+}
+
+void Recorder::hTimeout3()
+{
+    pjmedia_frame frame;
+
+    pj_int16_t* framebuf = new pj_int16_t[m_samples];
+
+    if(framebuf==NULL) {
+        return;
+    }
+
+    unsigned ms=0;
+
+    pjmedia_port_get_frame(p_port, &frame);
+
+    union {
+        pj_int32_t i;
+        char c[sizeof(pj_int32_t)];
+    } level32;
+
+    union {
+        int i;
+        char c[sizeof(int)];
+    } level;
+
+    level32.i = pjmedia_calc_avg_signal(framebuf,
+                                        PJMEDIA_PIA_SPF(&p_port->info));
+
+    level.i = pjmedia_linear2ulaw(level32.i) ^ 0xFF; // toggle
+    unsigned tx, rx;
+    pjmedia_conf_get_signal_level(pjsua_var.mconf, m_slot, &tx, &rx);
+
+    emit sendRxTx(tx, rx);
 }
 
 void Recorder::_disconnect_and_remove()
