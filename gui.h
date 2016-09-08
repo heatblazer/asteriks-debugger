@@ -21,6 +21,7 @@
 
 // independant recorder //
 #include "recorder.h"
+
 // independant player
 #include "player.h"
 
@@ -66,13 +67,12 @@ class Gui : public QWidget
     Q_OBJECT
 public:
     static Recorder g_recorder;
-    static Player   g_player;
 
 public:
     static void myLog(int level, const char* data, int len);
-
-    explicit Gui(QWidget *parent=nullptr);
-    virtual ~Gui();
+    static Gui& Instance();
+    Player& getPlayer();
+    Recorder& getRecorder();
 
 signals:
     void sendData(const QByteArray& data);
@@ -88,9 +88,12 @@ private slots:
     void stopPlayer();
     void updateVuMeterTx();
     void updateVuMeterRx();
+    void updateVuTxRx(unsigned tx, unsigned rx);
 
 
 private:
+    explicit Gui(QWidget *parent=nullptr);
+    virtual ~Gui();
     bool call();
     bool _isValidDigit(const char* str);
 
@@ -125,6 +128,9 @@ private:
     Console*     p_console;
     QFileDialog m_fileBrowser;
     SipApp*     p_sipApp;
+    Player*     p_player;
+    Recorder*   p_recorder;
+    static Gui* s_instance;
 
 };
 

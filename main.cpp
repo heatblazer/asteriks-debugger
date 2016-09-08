@@ -6,8 +6,7 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    izdebug::Gui gui;
-    gui.show();
+    izdebug::Gui::Instance().show();
 
     return app.exec();
 }

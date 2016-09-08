@@ -10,7 +10,6 @@
 #include "sipapp.h"
 
 #include <QThread>
-#include "thread.h"
 
 
 
@@ -66,16 +65,15 @@ namespace izdebug {
 
 
 Recorder Gui::g_recorder("test_rec1.wav");
-Player  Gui::g_player("test_pcma16.wav");
 
+Gui*    Gui::s_instance=nullptr;
 
 Gui::Gui(QWidget *parent)
     : QWidget(parent)
 {
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
-        Gui::g_recorder.create();
-        //Gui::g_player.create();
+        //Gui::g_recorder.create();/// refractory
     } else {
         // maybe handle it
     }
@@ -107,17 +105,14 @@ Gui::Gui(QWidget *parent)
         m_widget[0].layout.addWidget(&m_widget[0].button2, 0, Qt::AlignRight);
     }
 
+    // I`ll use that widget composition for the tonegen
     {
         m_widget[1].text.setMinimumSize(200, 25);
         m_widget[1].text.setMaximumSize(200, 25);
-        m_widget[1].text.setPlainText("UNUSED FOR NOW");
-        m_widget[1].text.setEnabled(false);
 
-
-        m_widget[1].button1.setText("Encode WAV");
+        m_widget[1].button1.setText("Generate sine tone");
         m_widget[1].button1.setMaximumSize(125, 25);
         m_widget[1].button1.setMinimumSize(125, 25);
-        m_widget[1].button1.setEnabled(false);
         m_widget[1].layout.addWidget(&m_widget[1].text, 0, Qt::AlignRight);
         m_widget[1].layout.addWidget(&m_widget[1].button1, 0, Qt::AlignRight);
 
@@ -234,13 +229,15 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(playFile()));
         connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
                 this, SLOT(stopPlayer()));
+        connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
+                p_sipApp, SLOT(stopWav()));
     }
 
     // vu meter connections
     {
         m_vuMeter.test[0].setInterval(200);
         m_vuMeter.test[1].setInterval(500);
-
+#if 0
         connect(&m_vuMeter.test[0], SIGNAL(timeout()),
                 this, SLOT(updateVuMeterRx()));
         connect(&m_vuMeter.test[1], SIGNAL(timeout()),
@@ -248,12 +245,14 @@ Gui::Gui(QWidget *parent)
 
         m_vuMeter.test[0].start();
         m_vuMeter.test[1].start();
-
+#endif
+        // TODO
+#if 0
+        connect(&g_recorder, SIGNAL(sendRxTx(uint,uint)),
+                this, SLOT(updateVuTxRx(uint,uint)));
+#endif
 
     }
-
-
-    pj_log_set_log_func(myLog);
 
 }
 
@@ -267,6 +266,16 @@ Gui::~Gui()
         delete p_sipApp;
         p_sipApp = nullptr;
     }
+}
+
+Player &Gui::getPlayer()
+{
+    return *p_player;
+}
+
+Recorder &Gui::getRecorder()
+{
+    return *p_recorder;
 }
 
 void Gui::hTextChange()
@@ -287,6 +296,9 @@ void Gui::hClicked2()
 {
     m_widget[0].button1.setDisabled(false);
     p_sipApp->hupCall();
+    m_vuMeter.progressBar[0].setValue(0);
+    m_vuMeter.progressBar[1].setValue(0);
+
 }
 
 bool Gui::call()
@@ -302,7 +314,7 @@ bool Gui::call()
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
         emit sendUri(uri);
-        Gui::g_recorder.start();
+        //Gui::g_recorder.start();
         //Gui::g_recorder.start2();
         return true;
     }
@@ -326,17 +338,22 @@ void Gui::playFile()
     if (!m_widget[2].text.toPlainText().isEmpty()) {
         std::cout << m_widget[2].text.toPlainText().toStdString() << "\n";
         const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
-        if(Gui::g_player.create()) {
-            Gui::g_player.setFile(s);
-            Gui::g_player.play();
+        if (p_player) {
+            delete p_player;
+            p_player = nullptr;
         }
+        p_player = new Player(QString(s));
+        if(p_player->create()) {
+            p_player->play();
+        }
+
     }
 }
 
 void Gui::stopPlayer()
 {
     std::cout << "Stopping player... " << std::endl;
-    Gui::g_player.stop();
+    p_player->stop();
 }
 
 void Gui::updateVuMeterTx()
@@ -365,6 +382,13 @@ void Gui::updateVuMeterRx()
     m_vuMeter.progressBar[1].setValue(a);
 }
 
+void Gui::updateVuTxRx(unsigned tx, unsigned rx)
+{
+    m_vuMeter.progressBar[0].setValue(tx);
+    m_vuMeter.progressBar[1].setValue(rx);
+
+}
+
 
 bool Gui::_isValidDigit(const char *str)
 {
@@ -382,6 +406,15 @@ bool Gui::_isValidDigit(const char *str)
 
 void Gui::myLog(int level, const char *data, int len)
 {
+}
+
+Gui &Gui::Instance()
+{
+    if (s_instance==nullptr) {
+        s_instance = new Gui;
+    }
+
+    return *s_instance;
 }
 
 
