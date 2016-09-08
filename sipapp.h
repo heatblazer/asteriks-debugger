@@ -43,6 +43,7 @@ public slots:
 
     void makeACall(const char *uri);
     void hupCall(void);
+    void stopWav();
 
 private:
 

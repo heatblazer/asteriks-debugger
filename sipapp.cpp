@@ -12,8 +12,6 @@
 // console //
 #include "gui.h"
 
-// thread //
-#include "thread.h"
 
 
 namespace izdebug {
@@ -46,6 +44,12 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
     if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
         pjsua_conf_connect(info.conf_slot, 0);
         pjsua_conf_connect(0, info.conf_slot);
+
+        // if the player has been created
+        if (1) {
+            Gui::Instance().getPlayer().setSink(info.conf_slot);
+            pjsua_conf_connect(Gui::Instance().getPlayer().getSlot(), info.conf_slot);
+        }
     }
 
 }
@@ -175,8 +179,6 @@ bool SipApp::create(const QString &uri)
         }
 
     }
-
-
     return true;
 }
 
@@ -191,12 +193,19 @@ void SipApp::makeACall(const char* uri)
         std::cout << "Failed to make a call!" << std::endl;
     }
 
+
 }
 
 void SipApp::hupCall()
 {
     pjsua_call_hangup_all();
-    Gui::g_recorder.stop();
+    //Gui::g_recorder.stop();
+}
+
+void SipApp::stopWav()
+{
+    pjsua_conf_disconnect(Gui::Instance().getPlayer().getSlot(),
+                          Gui::Instance().getPlayer().getSink());
 }
 
 } // namespace izdebug
