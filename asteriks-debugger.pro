@@ -38,26 +38,23 @@ LIBS += -lpjsua2-x86_64-unknown-linux-gnu \
 
 SOURCES += main.cpp \
     gui.cpp \
-    pjsua-encdec.cpp \
     mem-pool.cpp \
     sipapp.cpp \
     recorder.cpp \
     confbridge.cpp \
     mediaport.cpp \
-    thread.cpp \
+    tonegen.cpp \
     player.cpp
 
 HEADERS  += \
     gui.h \
-    pjsua-encdec.h \
     mem-pool.h \
     sipapp.h \
     defs.h \
     recorder.h \
     confbridge.h \
     mediaport.h \
-    thread.h \
-    player.h \
-    vu-meter.h
+    tonegen.h \
+    player.h
 
 FORMS    +=
