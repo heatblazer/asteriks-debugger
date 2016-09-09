@@ -66,8 +66,8 @@ class Gui : public QWidget
 {
     Q_OBJECT
 public:
-    static Recorder g_recorder;
-
+    QTimer      m_rec_timer;
+    QTimer      m_play_timer;
 public:
     static void myLog(int level, const char* data, int len);
     static Gui& Instance();
@@ -85,10 +85,10 @@ private slots:
     void hClear();
     void hLoadWav();
     void playFile();
-    void stopPlayer();
     void updateVuMeterTx();
     void updateVuMeterRx();
     void updateVuTxRx(unsigned tx, unsigned rx);
+    void hStartedPlayer(Player* plr);
 
 
 private:
@@ -121,16 +121,15 @@ private:
         QSpacerItem* spacer;
         Ruler*         rulertx;
         Ruler*         rulerrx;
-        QTimer test[2];
+        QTimer test[2]; // delete later
 
     } m_vuMeter;
 
     Console*     p_console;
     QFileDialog m_fileBrowser;
     SipApp*     p_sipApp;
-    Player*     p_player;
-    Recorder*   p_recorder;
     static Gui* s_instance;
+    friend class SipApp;
 
 };
 

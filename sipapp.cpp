@@ -12,10 +12,22 @@
 // console //
 #include "gui.h"
 
+#include <string.h>
+
 
 
 namespace izdebug {
 
+SipApp* SipApp::s_instance = nullptr;
+
+SipApp &SipApp::Instance()
+{
+    if(s_instance==nullptr) {
+        s_instance = new SipApp;
+    }
+
+    return *s_instance;
+}
 
 void SipApp::on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_rx_data *rx_data)
 {
@@ -41,14 +53,28 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
     pjsua_call_info info;
     pjsua_call_get_info(call_id, &info);
 
+
     if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
         pjsua_conf_connect(info.conf_slot, 0);
         pjsua_conf_connect(0, info.conf_slot);
+        // this will happen automatically on call
+        // if the recorder has been created
+        SipApp::Instance().p_recorder->create();
+        SipApp::Instance().p_recorder->start();
+        SipApp::Instance().p_recorder->setSink(info.conf_slot);
+        pjsua_conf_connect(info.conf_slot, SipApp::Instance().p_recorder->getSlot());
 
-        // if the player has been created
-        if (1) {
-            Gui::Instance().getPlayer().setSink(info.conf_slot);
-            pjsua_conf_connect(Gui::Instance().getPlayer().getSlot(), info.conf_slot);
+        if(SipApp::Instance().p_player==nullptr) {
+            SipApp::Instance().p_player = new Player("assets/1k0db.wav");
+
+            SipApp::Instance().p_player->create();
+            SipApp::Instance().p_player->play();
+            Gui::Instance().m_play_timer.start();
+            SipApp::Instance().p_player->setSink(info.conf_slot);
+            pjsua_conf_connect(SipApp::Instance().p_player->getSlot(),
+                               info.conf_slot);
+            emit SipApp::Instance().startPlayer(SipApp::Instance().p_player);
+
         }
     }
 
@@ -91,21 +117,32 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
     Console::Instance().putData(QByteArray(con));
 
     // play PCMU to the port
-
-
-
 }
 
 
-
 SipApp::SipApp(QObject *parent)
-    : QObject(parent)
+    : QObject(parent),
+      m_current_slot(-1),
+      p_player(nullptr),
+      p_recorder(nullptr)
 {
+    memset(m_pname, 0, (sizeof(m_pname)/sizeof(m_pname[0])));
+    p_recorder = new Recorder("test_rec.wav");
 
 }
 
 SipApp::~SipApp()
 {
+    if (p_player) {
+        p_player->stop();
+        delete p_player;
+    }
+
+    if(p_recorder) {
+        p_recorder->stop();
+        delete p_recorder;
+    }
+
     pjsua_destroy();
 }
 
@@ -179,7 +216,18 @@ bool SipApp::create(const QString &uri)
         }
 
     }
+
     return true;
+}
+
+void SipApp::setConfSlot(pjsua_conf_port_id conf_slot)
+{
+    m_current_slot = conf_slot;
+}
+
+int SipApp::getConfSlot()
+{
+    return (int) m_current_slot;
 }
 
 void SipApp::makeACall(const char* uri)
@@ -199,13 +247,59 @@ void SipApp::makeACall(const char* uri)
 void SipApp::hupCall()
 {
     pjsua_call_hangup_all();
-    //Gui::g_recorder.stop();
+
+    if (p_player) {
+        p_player->stop();
+        pjsua_conf_disconnect(p_player->getSink(),
+                              p_player->getSlot());
+    }
+
+    if (p_recorder) {
+        p_recorder->stop();
+        pjsua_conf_disconnect(p_recorder->getSink(),
+                              p_recorder->getSlot());
+    }
 }
 
 void SipApp::stopWav()
 {
-    pjsua_conf_disconnect(Gui::Instance().getPlayer().getSlot(),
-                          Gui::Instance().getPlayer().getSink());
+    if (p_player) {
+        pjsua_conf_disconnect(p_player->getSlot(),
+                          p_player->getSink());
+    }
 }
+
+/// untested
+/// \brief SipApp::playLoadedFile
+/// \param fname
+///
+void SipApp::playLoadedFile(const char *fname)
+{
+
+    p_player = new Player(QString(fname));
+    if(p_player->create()) {
+        p_player->play();
+        pjsua_conf_connect(p_player->getSlot(),
+                       0);
+    }
+
+}
+
+void SipApp::hPlayTimer()
+{
+
+   p_player->test();
+
+}
+
+void SipApp::hRecorderTimer()
+{
+    if (p_recorder) {
+        if(p_recorder->isRecording()) {
+            p_recorder->hTimeout3();
+        }
+    }
+}
+
 
 } // namespace izdebug

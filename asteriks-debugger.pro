@@ -43,7 +43,6 @@ SOURCES += main.cpp \
     recorder.cpp \
     confbridge.cpp \
     mediaport.cpp \
-    tonegen.cpp \
     player.cpp
 
 HEADERS  += \
@@ -54,7 +53,6 @@ HEADERS  += \
     recorder.h \
     confbridge.h \
     mediaport.h \
-    tonegen.h \
     player.h
 
 FORMS    +=

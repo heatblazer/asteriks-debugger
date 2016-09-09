@@ -26,7 +26,7 @@ public:
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
     virtual ~Recorder();
     bool create();
-    void destroy(void);
+    bool isRecording();
     pjmedia_port* pjPort();
 
 signals:
@@ -34,14 +34,13 @@ signals:
     void recording(bool);
     void sendRxTx(unsigned tx, unsigned rx);
 
-public slots:
+//public slots:
+public:
     void stop();
     void start();
 
-private slots:
-    void hRec(bool status);
+public slots:
     void hTimeout(void);
-    void hTimeout2(void);
     void hTimeout3(void);
 
 private:
@@ -54,7 +53,6 @@ private:
     unsigned m_slot;
     bool m_isRecording;
     QString m_fname;
-    QTimer m_timer;
     int m_samples;
 
 };

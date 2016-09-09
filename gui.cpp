@@ -64,8 +64,6 @@ static void trim(char* data)
 namespace izdebug {
 
 
-Recorder Gui::g_recorder("test_rec1.wav");
-
 Gui*    Gui::s_instance=nullptr;
 
 Gui::Gui(QWidget *parent)
@@ -73,7 +71,7 @@ Gui::Gui(QWidget *parent)
 {
     p_sipApp = new SipApp(this);
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
-        //Gui::g_recorder.create();/// refractory
+
     } else {
         // maybe handle it
     }
@@ -228,8 +226,6 @@ Gui::Gui(QWidget *parent)
         connect(&m_widget[2].button2, SIGNAL(clicked(bool)),
                 this, SLOT(playFile()));
         connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
-                this, SLOT(stopPlayer()));
-        connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
                 p_sipApp, SLOT(stopWav()));
     }
 
@@ -247,10 +243,19 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.test[1].start();
 #endif
         // TODO
-#if 0
-        connect(&g_recorder, SIGNAL(sendRxTx(uint,uint)),
-                this, SLOT(updateVuTxRx(uint,uint)));
-#endif
+
+
+        m_rec_timer.setInterval(200);
+        m_play_timer.setInterval(200);
+
+        connect(&m_play_timer, SIGNAL(timeout()),
+                p_sipApp, SLOT(hPlayTimer()));
+        connect(&m_rec_timer, SIGNAL(timeout()),
+                p_sipApp, SLOT(hRecorderTimer()));
+
+
+        m_play_timer.start();
+        m_rec_timer.start();
 
     }
 
@@ -268,15 +273,6 @@ Gui::~Gui()
     }
 }
 
-Player &Gui::getPlayer()
-{
-    return *p_player;
-}
-
-Recorder &Gui::getRecorder()
-{
-    return *p_recorder;
-}
 
 void Gui::hTextChange()
 {
@@ -314,8 +310,6 @@ bool Gui::call()
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
         emit sendUri(uri);
-        //Gui::g_recorder.start();
-        //Gui::g_recorder.start2();
         return true;
     }
     std::cout << "ERROR IN DIGITS!" << std::endl;
@@ -336,25 +330,12 @@ void Gui::playFile()
 {
     std::cout << "Playing file..." << std::endl;
     if (!m_widget[2].text.toPlainText().isEmpty()) {
-        std::cout << m_widget[2].text.toPlainText().toStdString() << "\n";
+        std::cout << m_widget[2].text.toPlainText().toStdString() << std::endl;
         const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
-        if (p_player) {
-            delete p_player;
-            p_player = nullptr;
-        }
-        p_player = new Player(QString(s));
-        if(p_player->create()) {
-            p_player->play();
-        }
-
+        p_sipApp->playLoadedFile(s);
     }
 }
 
-void Gui::stopPlayer()
-{
-    std::cout << "Stopping player... " << std::endl;
-    p_player->stop();
-}
 
 void Gui::updateVuMeterTx()
 {
@@ -389,6 +370,13 @@ void Gui::updateVuTxRx(unsigned tx, unsigned rx)
 
 }
 
+void Gui::hStartedPlayer(Player *plr)
+{
+   connect(&m_play_timer, SIGNAL(timeout()),
+           plr, SLOT(test()),
+           Qt::DirectConnection);
+   m_play_timer.start();
+}
 
 bool Gui::_isValidDigit(const char *str)
 {

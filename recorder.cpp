@@ -10,8 +10,12 @@
 // ansi C //
 #include <stdio.h>
 
+// C++ //
+#include <iostream>
+
 // console //
 #include "gui.h"
+
 
 namespace izdebug {
 
@@ -136,6 +140,11 @@ bool Recorder::create()
     return _create(m_fname.toLatin1().constData());
 }
 
+bool Recorder::isRecording()
+{
+    return m_isRecording;
+}
+
 bool Recorder::_create(const char *fname)
 {
     if (!m_isOk) {
@@ -147,6 +156,15 @@ bool Recorder::_create(const char *fname)
             // no conf bridge? why?
         }
 
+        pj_status_t status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
+                                       "test_wave_rec.wav",
+                                       PJMEDIA_PIA_SRATE(&conf->info),
+                                       PJMEDIA_PIA_CCNT(&conf->info),
+                                       PJMEDIA_PIA_SPF(&conf->info),
+                                       PJMEDIA_PIA_BITS(&conf->info),
+                                       0, 0,
+                                       &p_port);
+
         pjmedia_snd_port_create_rec(Pool::Instance().toPjPool(),
                                     -1,
                                     PJMEDIA_PIA_SRATE(&conf->info),
@@ -156,19 +174,10 @@ bool Recorder::_create(const char *fname)
                                     0,
                                     &p_sndPort);
 
-        pj_status_t status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
-                                       "caputre_pcma.wav",
-                                       PJMEDIA_PIA_SRATE(&conf->info),
-                                       PJMEDIA_PIA_CCNT(&conf->info),
-                                       PJMEDIA_PIA_SPF(&conf->info),
-                                       PJMEDIA_PIA_BITS(&conf->info),
-                                       0, 0,
-                                       &p_port);
-
 
          {
 
-//            pjmedia_snd_port_connect(p_sndPort, p_port);
+
             status = pjmedia_conf_add_port(pjsua_var.mconf,
                                        Pool::Instance().toPjPool(),
                                        p_port,
@@ -179,29 +188,15 @@ bool Recorder::_create(const char *fname)
                 return false;
             }
 
-        }
-        m_isOk = true;
-        m_timer.setInterval(200);
-        connect(this, SIGNAL(recording(bool)),
-                this, SLOT(hRec(bool)));
-//#error
-        // connect here to VU analyzer
-        connect(&m_timer, SIGNAL(timeout()),
-                this, SLOT(hTimeout()), Qt::DirectConnection);
+            pjmedia_snd_port_connect(p_sndPort, p_port);
 
-        connect(&m_timer, SIGNAL(timeout()),
-                this, SLOT(hTimeout3()), Qt::DirectConnection);
+        }
+        m_isOk = true;        
         return true;
     }
 
     return false;
 }
-
-void Recorder::destroy()
-{
-    _disconnect_and_remove();
-}
-
 
 pjmedia_port *Recorder::pjPort()
 {
@@ -212,8 +207,6 @@ void Recorder::stop()
 {
     if (m_isRecording) {
         //_disconnect_and_remove();
-        m_timer.stop();
-
         m_isRecording = false;
     }
     emit recording(false);
@@ -223,29 +216,12 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
-        m_timer.start();
-        m_isRecording = true;
-
-     }
+         m_isRecording = true;
+    }
     emit recording(true);
 
 }
 
-
-
-void Recorder::hRec(bool status)
-{
-    if (status) {
-        pj_status_t s1 = pjmedia_conf_connect_port(pjsua_var.mconf, 0, m_slot, 0);
-        (void)s1;
-
-     } else {
-        pjmedia_conf_disconnect_port(pjsua_var.mconf, 0, m_slot);
-        return;
-    }
-
-
-}
 
 void Recorder::hTimeout()
 {
@@ -254,7 +230,6 @@ void Recorder::hTimeout()
     unsigned ms;
 
     if(1){
-
         pjmedia_port_get_frame(p_port, &frame);
 
         union {
@@ -275,7 +250,6 @@ void Recorder::hTimeout()
         sprintf(txt, "tx:[%d]\trx[%d]\n", tx, rx);
         Console::Instance().putData(txt);
 
-
         for(int i=0; i < 8; ++i) {
             ms = i * 1000 * PJMEDIA_PIA_SPF(&p_port->info) /
                 PJMEDIA_PIA_SRATE(&p_port->info);
@@ -288,100 +262,9 @@ void Recorder::hTimeout()
 }
 
 
-void Recorder::hTimeout2()
-{
-    DELETEME:
-    {
-
-    }
-
-    pjmedia_frame frame;
-    //pjmedia_port* p_port = pjmedia_conf_get_master_port(pjsua_var.mconf);
-    short* buf;
-    unsigned i, samples_per_frame;
-    pj_size_t read, len;
-    unsigned start_pos;
-    unsigned lat_sum = 0,
-            lat_cnt = 0,
-            lat_min = 10000,
-            lat_max = 0;
-
-    samples_per_frame = PJMEDIA_PIA_SPF(&p_port->info);
-
-    frame.buf = pj_pool_alloc(Pool::Instance().toPjPool(), samples_per_frame);
-    frame.size = samples_per_frame;
-
-    len = samples_per_frame;
-    buf = (short*)pj_pool_alloc(Pool::Instance().toPjPool(), samples_per_frame);
-
-    read = 0;
-    while (read < len) {
-        pjmedia_port_get_frame(p_port, &frame);
-        pjmedia_copy_samples(buf, (short*)frame.buf, samples_per_frame);
-
-        read += samples_per_frame; // advance
-    }
-
-    start_pos = 0;
-    unsigned srate = PJMEDIA_PIA_SRATE(&p_port->info);
-    while (start_pos < srate) {
-        int max_signal = 0;
-        unsigned max_signal_pos = start_pos;
-        unsigned max_echo_pos = 0;
-        unsigned pos;
-        unsigned lat;
-
-        // get the largest signal
-        for(int i=start_pos; i < start_pos + PJMEDIA_PIA_SRATE(&p_port->info); ++i) {
-            if (abs(buf[i]) > max_signal) {
-                max_signal = abs(buf[i]);
-                max_signal_pos = i;
-            }
-        }
-
-        pos = max_signal_pos + 10 * PJMEDIA_PIA_SRATE(&p_port->info) / 1000;
-        max_signal = 0;
-        max_echo_pos = pos;
-
-        for(int i=pos; i < pos + PJMEDIA_PIA_SRATE(&p_port->info)/2; ++i) {
-            if (abs(buf[i]) > max_signal) {
-                max_signal = abs(buf[i]);
-                max_echo_pos = i;
-            }
-        }
-
-        lat = (max_echo_pos - max_signal_pos) * 1000 / PJMEDIA_PIA_SRATE(&p_port->info);
-        char txt[64]={0};
-        sprintf(txt, "Latency = %u\n", lat);
-        Console::Instance().putData(txt);
-
-        lat_sum += lat;
-        lat_cnt++;
-
-        if (lat < lat_min) {
-            lat_min = lat;
-        }
-        if (lat > lat_max) {
-            lat_max = lat;
-        }
-
-        start_pos += PJMEDIA_PIA_SRATE(&p_port->info);
-
-    }
-
-    char txt[256]={0};
-
-    sprintf(txt, "Latency avg = %u\n"
-            "Latency minimum = %u\n"
-            "Latency maximum = %u\n"
-            "Number of data = %u\n",
-            lat_sum/lat_cnt, lat_min, lat_max, lat_cnt);
-    Console::Instance().putData(txt);
-
-}
-
 void Recorder::hTimeout3()
 {
+    std::cout << "TIMEOIT RECORDER" << std::endl;
     pjmedia_frame frame;
 
     pj_int16_t* framebuf = new pj_int16_t[m_samples];
@@ -421,8 +304,7 @@ void Recorder::_disconnect_and_remove()
                                      0, m_slot);
 
         if (status == PJ_SUCCESS) {
-            pjmedia_port_destroy(p_port);
-            m_isOk = false; // we can create it again
+            m_isOk = false;
         }
     }
 }

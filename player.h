@@ -19,16 +19,17 @@ public:
 
 signals:
     void update(bool s);
-private slots:
-    void hTimeout1();
+    void sendRxTx(unsigned rx, unsigned tx);
+
+public slots:
+    void test();
 
 private:
     void _disconnect_and_remove();
 private:
     pjmedia_snd_port* p_sndPort;
     QString m_fname;
-    bool m_isPlaying;
-    QTimer  m_timer;
+    bool    m_isPlaying;
 
 };
 
