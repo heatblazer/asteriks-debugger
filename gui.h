@@ -123,6 +123,7 @@ private:
     static Gui* s_instance;
 
     friend class SipApp;
+    friend class Recorder;
 
 };
 

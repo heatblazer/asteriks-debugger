@@ -236,28 +236,6 @@ Gui::Gui(QWidget *parent)
         connect(&m_fileBrowser, SIGNAL(fileSelected(QString)),
                 &m_widget[2].text, SLOT(append(QString)));
 
-        connect(&m_widget[2].button1, SIGNAL(clicked(bool)),
-                this, SLOT(hLoadWav()));
-        connect(&m_widget[2].button2, SIGNAL(clicked(bool)),
-                this, SLOT(playFile()));
-        connect(&m_widget[2].button3, SIGNAL(clicked(bool)),
-                p_sipApp, SLOT(stopWav()));
-    }
-
-    // vu meter connections
-    {
-
-#if 0
-        connect(&m_vuMeter.test[0], SIGNAL(timeout()),
-                this, SLOT(updateVuMeterRx()));
-        connect(&m_vuMeter.test[1], SIGNAL(timeout()),
-                this, SLOT(updateVuMeterTx()));
-
-        m_vuMeter.test[0].start();
-        m_vuMeter.test[1].start();
-#endif
-        // TODO
-
     }
 
 }
@@ -333,7 +311,7 @@ void Gui::playFile()
     if (!m_widget[2].text.toPlainText().isEmpty()) {
         std::cout << m_widget[2].text.toPlainText().toStdString() << std::endl;
         const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
-        p_sipApp->playLoadedFile(s);
+
     }
 }
 

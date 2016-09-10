@@ -39,6 +39,7 @@ public:
 
 public slots:
     void hTimeout(void);
+    void hTimeout2(void);
     void hTimeout3(void);
 
 private:
@@ -52,7 +53,6 @@ private:
     bool m_isRecording;
     QString m_fname;
     int m_samples;
-    QTimer  m_timer;
 
 };
 

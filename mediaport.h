@@ -17,9 +17,11 @@ class MediaPort : public QObject
 public:
     virtual bool create()=0;
     virtual bool isAdded();
+    virtual void setSlot(unsigned slot);
     virtual unsigned getSlot();
     virtual void setSink(unsigned sink);
     virtual unsigned getSink();
+    virtual pjmedia_port* toPj();
 
 protected:
     explicit MediaPort(QObject* parent=nullptr);

@@ -82,11 +82,7 @@ bool Recorder::_create(const char *fname)
          {
 
 
-            status = pjmedia_conf_add_port(pjsua_var.mconf,
-                                       Pool::Instance().toPjPool(),
-                                       p_port,
-                                       NULL,
-                                       &m_slot);
+
             if (status != PJ_SUCCESS) {
                 pjmedia_port_destroy(p_port);
                 return false;
@@ -111,7 +107,11 @@ void Recorder::stop()
 {
     if (m_isRecording) {
         //_disconnect_and_remove();
+        pjmedia_conf_disconnect_port(pjsua_var.mconf,
+                                     getSlot(),
+                                     getSink());
         m_isRecording = false;
+
     }
     emit recording(false);
 }
@@ -120,10 +120,15 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
+        pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
+                              p_port, NULL, &m_slot);
+        pjmedia_conf_connect_port(pjsua_var.mconf,
+                                  getSink(),
+                                  getSlot(), 0);
+
          m_isRecording = true;
     }
     emit recording(true);
-
 }
 
 
@@ -165,52 +170,87 @@ void Recorder::hTimeout()
     }
 }
 
+void Recorder::hTimeout2()
+{
+    if (m_isRecording) {
+
+        pjmedia_frame frame;
+        pj_int16_t* framebuf = new pj_int16_t[m_samples];
+
+        if(framebuf==NULL) {
+            return;
+        }
+
+        pjmedia_port_get_frame(p_port, &frame);
+        pj_int16_t* bff = (pj_int16_t*)frame.buf;
+
+        // high watermar algorithm
+        int i = 0;
+        pj_int16_t hwm = 0;
+        for(; i < PJMEDIA_PIA_SPF(&p_port->info); i++) {
+            if (bff[i] >= hwm) {
+                hwm += bff[i];
+            } else {
+                hwm = bff[i];
+            }
+            Gui::Instance().m_vuMeter.progressBar[1].
+                    setValue((unsigned) hwm);
+
+        }
+    }
+    // else nothing
+}
+
 
 void Recorder::hTimeout3()
 {
-    std::cout << "TIMEOIT RECORDER" << std::endl;
-    pjmedia_frame frame;
+    if (m_isRecording) {
+        pjmedia_frame frame;
 
-    pj_int16_t* framebuf = new pj_int16_t[m_samples];
+        pj_int16_t* framebuf = new pj_int16_t[m_samples];
 
-    if(framebuf==NULL) {
-        return;
+        if(framebuf==NULL) {
+            return;
+        }
+
+        unsigned ms=0;
+
+        pjmedia_port_get_frame(p_port, &frame);
+
+        pj_int32_t level32;
+        int level;
+
+        level32 = pjmedia_calc_avg_signal(framebuf,
+                                            PJMEDIA_PIA_SPF(&p_port->info));
+
+        level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
+        unsigned tx, rx;
+        pj_int16_t* bff = (pj_int16_t*)frame.buf;
+
+        // high watermar algorithm
+        pj_int16_t hwm = 0;
+        for(int i=0; i < PJMEDIA_PIA_SPF(&p_port->info); i++) {
+            if (bff[i] >= hwm) {
+                hwm += bff[i];
+            } else {
+                hwm = bff[i];
+            }
+            Gui::Instance().m_vuMeter.progressBar[1].
+                    setValue((unsigned) hwm);
+
+        }
+        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
+    //    pjmedia_conf_get_signal_level(pjsua_var.mconf, getSink(), &tx, &rx);
+
+
+//    Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
     }
 
-    unsigned ms=0;
-
-    pjmedia_port_get_frame(p_port, &frame);
-
-    union {
-        pj_int32_t i;
-        char c[sizeof(pj_int32_t)];
-    } level32;
-
-    union {
-        int i;
-        char c[sizeof(int)];
-    } level;
-
-    level32.i = pjmedia_calc_avg_signal(framebuf,
-                                        PJMEDIA_PIA_SPF(&p_port->info));
-
-    level.i = pjmedia_linear2ulaw(level32.i) ^ 0xFF; // toggle
-    unsigned tx, rx;
-    pjmedia_conf_get_signal_level(pjsua_var.mconf, m_slot, &tx, &rx);
-
-    emit sendRxTx(tx, rx);
 }
 
 void Recorder::_disconnect_and_remove()
 {
-    if (m_isRecording && m_isOk) {
-        pj_status_t status = pjmedia_conf_disconnect_port(pjsua_var.mconf,
-                                     0, m_slot);
 
-        if (status == PJ_SUCCESS) {
-            m_isOk = false;
-        }
-    }
 }
 
 } // namespace izdebug

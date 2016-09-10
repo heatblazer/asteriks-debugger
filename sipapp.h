@@ -26,6 +26,9 @@ class SipApp : public QObject
     Q_OBJECT
 public:
     static QList<Player*> g_players;
+    static Recorder*    g_recorder;
+    static QTimer       g_rec_timer;
+
 
 
     static SipApp& Instance();
@@ -57,10 +60,6 @@ public slots:
 
     void makeACall(const char *uri);
     void hupCall(void);
-    void stopWav();
-    void playLoadedFile(const char* fname);
-    void hPlayTimer();
-    void hRecorderTimer();
 
 public:
     explicit SipApp(QObject* parent=nullptr);
@@ -73,7 +72,10 @@ public:
     char    m_pname[256];
     Recorder*   p_recorder;
     Gui*        p_gui;
+
     friend class Gui;
+    friend class Player;
+    friend class Recorder;
 
 };
 

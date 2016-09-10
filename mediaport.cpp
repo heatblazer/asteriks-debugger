@@ -22,6 +22,11 @@ bool MediaPort::isAdded()
 
 }
 
+void MediaPort::setSlot(unsigned slot)
+{
+    m_slot = slot;
+}
+
 unsigned MediaPort::getSlot()
 {
     return m_slot;
@@ -33,11 +38,17 @@ unsigned MediaPort::getSink()
     return m_sink;
 }
 
+pjmedia_port *MediaPort::toPj()
+{
+    return p_port;
+}
+
 void MediaPort::setSink(unsigned sink)
 {
     m_sink = sink;
 }
 
+// do the work of destruction here remove destroyings from derivates
 MediaPort::~MediaPort()
 {
     if (p_port != nullptr) {

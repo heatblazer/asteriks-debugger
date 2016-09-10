@@ -33,14 +33,19 @@ bool Player::create()
             // no conf bridge? why?
         }
 
-        pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
+        pj_status_t s = pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
                                        m_fname.toLatin1().constData(),
                                        PJMEDIA_PIA_CCNT(&conf->info),
                                        0, 0,
                                        &p_port
                                        );
 
-        pjmedia_snd_port_create_player(Pool::Instance().toPjPool(),
+        if (s != PJ_SUCCESS) {
+            //
+            std::cout << "Failed to create port!" << std::endl;
+        }
+
+        s = pjmedia_snd_port_create_player(Pool::Instance().toPjPool(),
                                     -1,
                                     PJMEDIA_PIA_SRATE(&conf->info),
                                     PJMEDIA_PIA_CCNT(&conf->info),
@@ -49,22 +54,13 @@ bool Player::create()
                                     0,
                                     &p_sndPort);
 
-         {
+        if (s != PJ_SUCCESS) {
+            //
+        }
+
+        {
 
             //pjmedia_snd_port_connect(p_sndPort, p_port);
-#if 0
-            pj_status_t status = pjmedia_conf_add_port(pjsua_var.mconf,
-                                       Pool::Instance().toPjPool(),
-                                       p_port,
-                                       NULL,
-                                       &m_slot);
-
-            if (status != PJ_SUCCESS) {
-                pjmedia_port_destroy(p_port);
-                m_isAdded = true;
-                return m_isOk;
-            }
-#endif
         }
         m_timer.setInterval(100);
         m_isOk = true;
@@ -76,6 +72,12 @@ bool Player::create()
 void Player::play()
 {
     if(!m_isPlaying) {
+        // pjmedia
+         //pjmedia_snd_port_connect(p_sndPort, p_port);
+         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
+                               p_port, NULL, &m_slot);
+         pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
+
         m_isPlaying = true;
         m_timer.start();
     }
@@ -86,6 +88,9 @@ void Player::stop()
 {
 
     if(m_isPlaying) {
+
+        pjmedia_conf_disconnect_port(pjsua_var.mconf,
+                                     getSlot(), getSink());
         m_isPlaying = false;
         m_timer.stop();
     }
@@ -94,13 +99,12 @@ void Player::stop()
 
 void Player::playToConf()
 {
-    m_isPlaying ^= true;
-    if (m_isPlaying) {
+    if (!m_isPlaying) {
         std::cout << "Play.." << std::endl;
         play();
+
     } else {
         std::cout << "Stop.." << std::endl;
-
         stop();
     }
 }

@@ -18,7 +18,11 @@
 
 namespace izdebug {
 
+// statics
 SipApp* SipApp::s_instance = nullptr;
+QList<Player*> SipApp::g_players;
+Recorder* SipApp::g_recorder = nullptr;
+QTimer SipApp::g_rec_timer;
 
 
 SipApp &SipApp::Instance()
@@ -62,24 +66,15 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
         pjsua_conf_connect(0, info.conf_slot);
         // this will happen automatically on call
         // if the recorder has been created
+        g_recorder->setSink(info.conf_slot);
 
-        SipApp::Instance().p_recorder->create();
-        SipApp::Instance().p_recorder->start();
-        SipApp::Instance().p_recorder->setSink(info.conf_slot);
-        pjsua_conf_connect(info.conf_slot, SipApp::Instance().p_recorder->getSlot());
-    }
-#if 0
-        if(SipApp::Instance().p_player==nullptr) {
-            SipApp::Instance().p_player = new Player("assets/1k0db.wav");
+        for(int i=0; i < g_players.count(); i++) {
+            g_players.at(i)->setSink(info.conf_slot);
+        }
 
-            SipApp::Instance().p_player->create();
-            SipApp::Instance().p_player->play();
-            Gui::Instance().m_play_timer.start();
-            SipApp::Instance().p_player->setSink(info.conf_slot);
-            pjsua_conf_connect(SipApp::Instance().p_player->getSlot(),
-                               info.conf_slot);
-#endif
+        g_recorder->start();
 
+     }
 }
 
 void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
@@ -122,19 +117,23 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 }
 
 
-QList<Player*> SipApp::g_players;
-
 SipApp::SipApp(QObject *parent)
     : QObject(parent),
       m_current_slot(-1),
       m_isCreated(false)
 {
 
-    g_players.append(new Player("1k0db.wav"));
-    g_players.append(new Player("1k-6db.wav"));
-    g_players.append(new Player("1k-12db.wav"));
-    g_players.append(new Player("1k-24db.wav"));
+    g_players.append(new Player("assets/1k0db.wav"));
+    g_players.append(new Player("assets/1k-6db.wav"));
+    g_players.append(new Player("assets/1k-12db.wav"));
+    g_players.append(new Player("assets/1k-24db.wav"));
+    g_recorder = new Recorder("test_rec.wav");
 
+    g_rec_timer.setInterval(50);
+    connect(&g_rec_timer, SIGNAL(timeout()),
+            g_recorder, SLOT(hTimeout2()));
+
+    g_rec_timer.start();
 
 }
 
@@ -220,6 +219,7 @@ bool SipApp::create(const QString &uri)
             g_players.at(i)->create();
         }
 
+        g_recorder->create();
     }
 
     return m_isCreated;
@@ -253,38 +253,14 @@ void SipApp::makeACall(const char* uri)
 void SipApp::hupCall()
 {
     pjsua_call_hangup_all();
-
-}
-
-void SipApp::stopWav()
-{
-
-}
-
-/// untested
-/// \brief SipApp::playLoadedFile
-/// \param fname
-///
-void SipApp::playLoadedFile(const char *fname)
-{
-
-
-
-}
-
-void SipApp::hPlayTimer()
-{
-
-}
-
-void SipApp::hRecorderTimer()
-{
-    if (p_recorder) {
-        if(p_recorder->isRecording()) {
-            p_recorder->hTimeout3();
-        }
+    for(int i=0; i < g_players.count(); i++) {
+        g_players.at(i)->stop();
     }
+    g_recorder->stop();
+    g_rec_timer.stop();
+
 }
+
 
 
 } // namespace izdebug
