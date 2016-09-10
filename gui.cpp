@@ -11,7 +11,8 @@
 
 #include <QThread>
 
-
+#include "recorder.h"
+#include "player.h"
 
 #include <pjlib-util/cli.h>
 #include <pjlib-util/cli_imp.h>
@@ -20,6 +21,7 @@
 #include <pjlib-util/errno.h>
 #include <pjlib.h>
 
+#include "mem-pool.h"
 
 /// aux function to determine strlen
 /// \brief aux_strlen
@@ -63,13 +65,15 @@ static void trim(char* data)
 
 namespace izdebug {
 
-
 Gui*    Gui::s_instance=nullptr;
 
 Gui::Gui(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+      p_console(nullptr),
+      p_sipApp(nullptr)
+
 {
-    p_sipApp = new SipApp(this);
+    p_sipApp = &SipApp::Instance();
     if(p_sipApp->create("sip:6016@192.168.32.89")) {
 
     } else {
@@ -77,11 +81,11 @@ Gui::Gui(QWidget *parent)
     }
 
 
+    // console instance for messages
     {
         p_console = &Console::Instance();
         m_lvbox.addWidget(p_console);
     }
-
 
     setMinimumSize(QSize(1024 , 480));
     setMaximumSize(QSize(1024, 480));
@@ -118,27 +122,38 @@ Gui::Gui(QWidget *parent)
 
     {
         // extra button to stop
+
         m_widget[2].text.setMinimumSize(200, 25);
         m_widget[2].text.setMaximumSize(200, 25);
         m_widget[2].text.setEnabled(false);
 
+#if 0
         m_widget[2].button1.setText("Open WAV");
         m_widget[2].button2.setText("Play file");
         m_widget[2].button3.setText("Stop WAV");
+#endif
+        m_widget[2].tones[0].setText("1k0db");
+        m_widget[2].tones[1].setText("1k-6db");
+        m_widget[2].tones[2].setText("1k-12db");
+        m_widget[2].tones[3].setText("1k-24db");
 
 
-        m_widget[2].button1.setMaximumSize(125, 25);
-        m_widget[2].button1.setMinimumSize(125, 25);
-        m_widget[2].button2.setMaximumSize(125, 25);
-        m_widget[2].button2.setMinimumSize(125, 25);
-        m_widget[2].button3.setMaximumSize(125, 25);
-        m_widget[2].button3.setMinimumSize(125, 25);
+
+        for(int i=0; i < 4; i++) {
+            m_widget[2].tones[i].setMinimumSize(80, 30);
+            m_widget[2].tones[i].setMaximumSize(80, 30);
+            m_widget[2].layout2.addWidget(&m_widget[2].tones[i]);
+            // connect to players
+         }
+        for(int i=0; i < SipApp::g_players.count(); i++) {
+            Player* p = SipApp::g_players.at(i);
+            connect(&m_widget[2].tones[i], SIGNAL(clicked(bool)),
+                    p, SLOT(playToConf()));
+        }
 
 
-        m_widget[2].layout.addWidget(&m_widget[2].text, 0, Qt::AlignRight);
-        m_widget[2].layout.addWidget(&m_widget[2].button1, 0, Qt::AlignRight);
-        m_widget[2].layout.addWidget(&m_widget[2].button2, 0, Qt::AlignRight);
-        m_widget[2].layout.addWidget(&m_widget[2].button3, 0, Qt::AlignRight);
+        m_widget[2].layout.addLayout(&m_widget[2].layout2);
+
 
     }
     // vu meter connect to the higheest signal
@@ -174,17 +189,17 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.ly[1].addWidget(&m_vuMeter.label[1]);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.progressBar[1]);
 
-        m_vuMeter.layout.addLayout(&m_vuMeter.ly[0]);
-        m_vuMeter.layout.addLayout(&m_vuMeter.ly[2]);
-        m_vuMeter.layout.addLayout(&m_vuMeter.ly[1]);
-        m_vuMeter.layout.addLayout(&m_vuMeter.ly[3]);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[0], Qt::AlignBottom);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[2], Qt::AlignBottom);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[1], Qt::AlignBottom);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[3], Qt::AlignBottom);
 
     }
 
     m_rvbox.addLayout(&m_widget[0].layout);
     m_rvbox.addLayout(&m_widget[1].layout);
     m_rvbox.addLayout(&m_widget[2].layout);
-    m_midbox.addLayout(&m_vuMeter.layout);
+    m_midbox.addLayout(&m_vuMeter.layout, Qt::AlignBottom);
 
     m_lvbox.addWidget(p_console, 0, Qt::AlignLeft);
 
@@ -231,8 +246,7 @@ Gui::Gui(QWidget *parent)
 
     // vu meter connections
     {
-        m_vuMeter.test[0].setInterval(200);
-        m_vuMeter.test[1].setInterval(500);
+
 #if 0
         connect(&m_vuMeter.test[0], SIGNAL(timeout()),
                 this, SLOT(updateVuMeterRx()));
@@ -243,19 +257,6 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.test[1].start();
 #endif
         // TODO
-
-
-        m_rec_timer.setInterval(200);
-        m_play_timer.setInterval(200);
-
-        connect(&m_play_timer, SIGNAL(timeout()),
-                p_sipApp, SLOT(hPlayTimer()));
-        connect(&m_rec_timer, SIGNAL(timeout()),
-                p_sipApp, SLOT(hRecorderTimer()));
-
-
-        m_play_timer.start();
-        m_rec_timer.start();
 
     }
 
@@ -370,13 +371,12 @@ void Gui::updateVuTxRx(unsigned tx, unsigned rx)
 
 }
 
-void Gui::hStartedPlayer(Player *plr)
+void Gui::hOnCallMediaState()
 {
-   connect(&m_play_timer, SIGNAL(timeout()),
-           plr, SLOT(test()),
-           Qt::DirectConnection);
-   m_play_timer.start();
+
+
 }
+
 
 bool Gui::_isValidDigit(const char *str)
 {

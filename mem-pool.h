@@ -14,8 +14,8 @@ public:
     void* alloc(pj_size_t size);
     pj_pool_t* toPjPool() const;
 
-private:
-    Pool();
+public:
+     Pool();
     ~Pool();
 
     pj_pool_t*  p_pool;

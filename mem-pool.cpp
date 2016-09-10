@@ -3,14 +3,11 @@
 namespace izdebug {
 
 Pool* Pool::s_inst = nullptr;
+static Pool g_pool;
 
 Pool &Pool::Instance()
 {
-    if(s_inst == nullptr) {
-        s_inst = new Pool();
-    }
-
-    return *s_inst;
+    return g_pool;
 }
 
 void *Pool::zero_alloc(pj_size_t size)

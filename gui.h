@@ -19,12 +19,6 @@
 
 #include "defs.h"
 
-// independant recorder //
-#include "recorder.h"
-
-// independant player
-#include "player.h"
-
 namespace izdebug {
 
 class Gui;
@@ -65,14 +59,10 @@ private:
 class Gui : public QWidget
 {
     Q_OBJECT
-public:
-    QTimer      m_rec_timer;
-    QTimer      m_play_timer;
+
 public:
     static void myLog(int level, const char* data, int len);
     static Gui& Instance();
-    Player& getPlayer();
-    Recorder& getRecorder();
 
 signals:
     void sendData(const QByteArray& data);
@@ -88,7 +78,7 @@ private slots:
     void updateVuMeterTx();
     void updateVuMeterRx();
     void updateVuTxRx(unsigned tx, unsigned rx);
-    void hStartedPlayer(Player* plr);
+    void hOnCallMediaState();
 
 
 private:
@@ -108,7 +98,10 @@ private:
         QPushButton button1;
         QPushButton button2;
         QPushButton button3; // for stop player for now
+        QPushButton tones[4];
         QVBoxLayout layout;
+        QHBoxLayout layout2;
+
     } m_widget[3];
 
 
@@ -121,7 +114,6 @@ private:
         QSpacerItem* spacer;
         Ruler*         rulertx;
         Ruler*         rulerrx;
-        QTimer test[2]; // delete later
 
     } m_vuMeter;
 
@@ -129,6 +121,7 @@ private:
     QFileDialog m_fileBrowser;
     SipApp*     p_sipApp;
     static Gui* s_instance;
+
     friend class SipApp;
 
 };
@@ -146,6 +139,8 @@ public:
 
 private:
     QPoint  m_position;
+
+
 };
 
 

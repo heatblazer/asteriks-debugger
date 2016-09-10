@@ -1,8 +1,6 @@
 #ifndef RECORDER_H
 #define RECORDER_H
 
-// qt //
-#include <QTimer>
 
 // pjlib //
 #include <pjmedia.h>
@@ -11,6 +9,7 @@
 
 // parent //
 #include "mediaport.h"
+#include <QTimer>
 
 namespace izdebug {
 
@@ -21,7 +20,6 @@ class Recorder : public MediaPort
     Q_OBJECT
 public:
     static int entryPoint(void* user_data);
-    static int latency(void* usr);
 
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
     virtual ~Recorder();
@@ -54,6 +52,7 @@ private:
     bool m_isRecording;
     QString m_fname;
     int m_samples;
+    QTimer  m_timer;
 
 };
 

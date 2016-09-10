@@ -51,7 +51,8 @@ bool Player::create()
 
          {
 
-            pjmedia_snd_port_connect(p_sndPort, p_port);
+            //pjmedia_snd_port_connect(p_sndPort, p_port);
+#if 0
             pj_status_t status = pjmedia_conf_add_port(pjsua_var.mconf,
                                        Pool::Instance().toPjPool(),
                                        p_port,
@@ -63,10 +64,10 @@ bool Player::create()
                 m_isAdded = true;
                 return m_isOk;
             }
+#endif
         }
+        m_timer.setInterval(100);
         m_isOk = true;
-
-
     }
 
     return m_isOk;
@@ -76,6 +77,7 @@ void Player::play()
 {
     if(!m_isPlaying) {
         m_isPlaying = true;
+        m_timer.start();
     }
     emit update(m_isPlaying);
 }
@@ -85,15 +87,24 @@ void Player::stop()
 
     if(m_isPlaying) {
         m_isPlaying = false;
+        m_timer.stop();
     }
     emit update(m_isPlaying);
 }
 
-
-void Player::test()
+void Player::playToConf()
 {
-    std::cout << "PLAYER TIMER!" << std::endl;
+    m_isPlaying ^= true;
+    if (m_isPlaying) {
+        std::cout << "Play.." << std::endl;
+        play();
+    } else {
+        std::cout << "Stop.." << std::endl;
+
+        stop();
+    }
 }
+
 
 void Player::_disconnect_and_remove()
 {

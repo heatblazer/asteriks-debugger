@@ -25,6 +25,9 @@ class SipApp : public QObject
 {
     Q_OBJECT
 public:
+    static QList<Player*> g_players;
+
+
     static SipApp& Instance();
     static void on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id,
                                   pjsip_rx_data* rx_data);
@@ -46,10 +49,10 @@ public:
     // that is gained on call media state
     void setConfSlot(pjsua_conf_port_id conf_slot);
     int getConfSlot(void);
+
 signals:
-    void startPlayer(Player*  plr);
-    void startPlayerTimer();
-    void startRecorderTimer();
+    void onCallMediaState();
+
 public slots:
 
     void makeACall(const char *uri);
@@ -59,7 +62,6 @@ public slots:
     void hPlayTimer();
     void hRecorderTimer();
 
-private:
 public:
     explicit SipApp(QObject* parent=nullptr);
     virtual ~SipApp();
@@ -67,11 +69,10 @@ public:
     static SipApp* s_instance;
     pjsua_acc_id m_acc_id;
     pjsua_conf_port_id m_current_slot;
+    bool m_isCreated;
     char    m_pname[256];
-    Player*     p_player;
     Recorder*   p_recorder;
     Gui*        p_gui;
-
     friend class Gui;
 
 };

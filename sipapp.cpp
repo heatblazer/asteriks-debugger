@@ -14,15 +14,16 @@
 
 #include <string.h>
 
-
+#include <QMutex>
 
 namespace izdebug {
 
 SipApp* SipApp::s_instance = nullptr;
 
+
 SipApp &SipApp::Instance()
 {
-    if(s_instance==nullptr) {
+    if (s_instance==nullptr) {
         s_instance = new SipApp;
     }
 
@@ -53,17 +54,21 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
     pjsua_call_info info;
     pjsua_call_get_info(call_id, &info);
 
+// refractor to the back logic where player and recorder are in
+// the same class in GUI
 
     if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
         pjsua_conf_connect(info.conf_slot, 0);
         pjsua_conf_connect(0, info.conf_slot);
         // this will happen automatically on call
         // if the recorder has been created
+
         SipApp::Instance().p_recorder->create();
         SipApp::Instance().p_recorder->start();
         SipApp::Instance().p_recorder->setSink(info.conf_slot);
         pjsua_conf_connect(info.conf_slot, SipApp::Instance().p_recorder->getSlot());
-
+    }
+#if 0
         if(SipApp::Instance().p_player==nullptr) {
             SipApp::Instance().p_player = new Player("assets/1k0db.wav");
 
@@ -73,10 +78,7 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
             SipApp::Instance().p_player->setSink(info.conf_slot);
             pjsua_conf_connect(SipApp::Instance().p_player->getSlot(),
                                info.conf_slot);
-            emit SipApp::Instance().startPlayer(SipApp::Instance().p_player);
-
-        }
-    }
+#endif
 
 }
 
@@ -120,104 +122,108 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 }
 
 
+QList<Player*> SipApp::g_players;
+
 SipApp::SipApp(QObject *parent)
     : QObject(parent),
       m_current_slot(-1),
-      p_player(nullptr),
-      p_recorder(nullptr)
+      m_isCreated(false)
 {
-    memset(m_pname, 0, (sizeof(m_pname)/sizeof(m_pname[0])));
-    p_recorder = new Recorder("test_rec.wav");
+
+    g_players.append(new Player("1k0db.wav"));
+    g_players.append(new Player("1k-6db.wav"));
+    g_players.append(new Player("1k-12db.wav"));
+    g_players.append(new Player("1k-24db.wav"));
+
 
 }
 
 SipApp::~SipApp()
 {
-    if (p_player) {
-        p_player->stop();
-        delete p_player;
-    }
-
-    if(p_recorder) {
-        p_recorder->stop();
-        delete p_recorder;
-    }
 
     pjsua_destroy();
 }
 
 bool SipApp::create(const QString &uri)
 {
-    pj_status_t status;
-    status = pjsua_create();
-    if (status != PJ_SUCCESS) {
-        return false;
-    }
-
-    status = pjsua_verify_url(uri.toLatin1().constData());
-    if (status != PJ_SUCCESS) {
-        return false;
-    }
-
-    {
-        pjsua_config cfg;
-        pjsua_config_default(&cfg);
-
-        cfg.cb.on_incoming_call = &SipApp::on_incomming_call;
-        cfg.cb.on_call_media_state = &SipApp::on_call_media_state;
-        cfg.cb.on_call_state = &SipApp::on_call_state;
-        cfg.cb.on_stream_created = &SipApp::on_stream_created;
-
-        status = pjsua_init(&cfg, NULL, NULL);
-
-        if (status != PJ_SUCCESS) {
-            return false;
-        }
-    }
-
-    {
-        pjsua_transport_config cfg;
-        pjsua_transport_id id;
-        pjsua_transport_config_default(&cfg);
-        cfg.port = 5060;
-        status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &cfg, &id);
+    if (!m_isCreated) {
+        pj_status_t status;
+        status = pjsua_create();
         if (status != PJ_SUCCESS) {
             return false;
         }
 
-    }
+        status = pjsua_verify_url(uri.toLatin1().constData());
+        if (status != PJ_SUCCESS) {
+            return false;
+        }
 
-    // start pjsua
-    status = pjsua_start();
+        {
+            pjsua_config cfg;
+            pjsua_config_default(&cfg);
 
-    if (status != PJ_SUCCESS) {
-        return false;
-    }
+            cfg.cb.on_incoming_call = &SipApp::on_incomming_call;
+            cfg.cb.on_call_media_state = &SipApp::on_call_media_state;
+            cfg.cb.on_call_state = &SipApp::on_call_state;
+            cfg.cb.on_stream_created = &SipApp::on_stream_created;
 
-    {
-        pjsua_acc_config cfg;
-        pjsua_acc_config_default(&cfg);
+            status = pjsua_init(&cfg, NULL, NULL);
 
-        char idstr[128]={0};
-        sprintf(idstr, "sip:%s@%s", SIP_USER, SIP_DOMAIN);
-        cfg.id = pj_str(idstr);
-        cfg.reg_uri = pj_str("sip:example.com");
-        cfg.cred_count = 1;
-        cfg.cred_info[0].realm = pj_str(SIP_DOMAIN);
-        cfg.cred_info[0].scheme = pj_str("digest");
-        cfg.cred_info[0].username = pj_str(SIP_USER);
-        cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
-        cfg.cred_info[0].data = pj_str(SIP_PASS);
+            if (status != PJ_SUCCESS) {
+                return false;
+            }
+        }
 
-        status = pjsua_acc_add(&cfg, PJ_TRUE, &m_acc_id);
+        {
+            pjsua_transport_config cfg;
+            pjsua_transport_id id;
+            pjsua_transport_config_default(&cfg);
+            cfg.port = 5060;
+            status = pjsua_transport_create(PJSIP_TRANSPORT_UDP, &cfg, &id);
+            if (status != PJ_SUCCESS) {
+                return false;
+            }
+
+        }
+
+        // start pjsua
+        status = pjsua_start();
 
         if (status != PJ_SUCCESS) {
             return false;
         }
 
+        {
+            pjsua_acc_config cfg;
+            pjsua_acc_config_default(&cfg);
+
+            char idstr[128]={0};
+            sprintf(idstr, "sip:%s@%s", SIP_USER, SIP_DOMAIN);
+            cfg.id = pj_str(idstr);
+            cfg.reg_uri = pj_str("sip:example.com");
+            cfg.cred_count = 1;
+            cfg.cred_info[0].realm = pj_str(SIP_DOMAIN);
+            cfg.cred_info[0].scheme = pj_str("digest");
+            cfg.cred_info[0].username = pj_str(SIP_USER);
+            cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
+            cfg.cred_info[0].data = pj_str(SIP_PASS);
+
+            status = pjsua_acc_add(&cfg, PJ_TRUE, &m_acc_id);
+
+            if (status != PJ_SUCCESS) {
+                return false;
+            }
+
+        }
+        m_isCreated = true;
+        for(int i=0; i < g_players.count(); i++) {
+            g_players.at(i)->create();
+        }
+
     }
 
-    return true;
+    return m_isCreated;
+
 }
 
 void SipApp::setConfSlot(pjsua_conf_port_id conf_slot)
@@ -248,25 +254,11 @@ void SipApp::hupCall()
 {
     pjsua_call_hangup_all();
 
-    if (p_player) {
-        p_player->stop();
-        pjsua_conf_disconnect(p_player->getSink(),
-                              p_player->getSlot());
-    }
-
-    if (p_recorder) {
-        p_recorder->stop();
-        pjsua_conf_disconnect(p_recorder->getSink(),
-                              p_recorder->getSlot());
-    }
 }
 
 void SipApp::stopWav()
 {
-    if (p_player) {
-        pjsua_conf_disconnect(p_player->getSlot(),
-                          p_player->getSink());
-    }
+
 }
 
 /// untested
@@ -276,19 +268,12 @@ void SipApp::stopWav()
 void SipApp::playLoadedFile(const char *fname)
 {
 
-    p_player = new Player(QString(fname));
-    if(p_player->create()) {
-        p_player->play();
-        pjsua_conf_connect(p_player->getSlot(),
-                       0);
-    }
+
 
 }
 
 void SipApp::hPlayTimer()
 {
-
-   p_player->test();
 
 }
 
