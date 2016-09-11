@@ -20,9 +20,10 @@ namespace izdebug {
 
 // statics
 SipApp* SipApp::s_instance = nullptr;
+
 QList<Player*> SipApp::g_players;
+
 Recorder* SipApp::g_recorder = nullptr;
-QTimer SipApp::g_rec_timer;
 
 
 SipApp &SipApp::Instance()
@@ -66,13 +67,13 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
         pjsua_conf_connect(0, info.conf_slot);
         // this will happen automatically on call
         // if the recorder has been created
+
         g_recorder->setSink(info.conf_slot);
 
         for(int i=0; i < g_players.count(); i++) {
             g_players.at(i)->setSink(info.conf_slot);
         }
 
-        g_recorder->start();
 
      }
 }
@@ -129,11 +130,6 @@ SipApp::SipApp(QObject *parent)
     g_players.append(new Player("assets/1k-24db.wav"));
     g_recorder = new Recorder("test_rec.wav");
 
-    g_rec_timer.setInterval(50);
-    connect(&g_rec_timer, SIGNAL(timeout()),
-            g_recorder, SLOT(hTimeout2()));
-
-    g_rec_timer.start();
 
 }
 
@@ -151,6 +147,7 @@ bool SipApp::create(const QString &uri)
         if (status != PJ_SUCCESS) {
             return false;
         }
+
 
         status = pjsua_verify_url(uri.toLatin1().constData());
         if (status != PJ_SUCCESS) {
@@ -220,6 +217,8 @@ bool SipApp::create(const QString &uri)
         }
 
         g_recorder->create();
+        g_recorder->start();
+
     }
 
     return m_isCreated;
@@ -247,7 +246,6 @@ void SipApp::makeACall(const char* uri)
         std::cout << "Failed to make a call!" << std::endl;
     }
 
-
 }
 
 void SipApp::hupCall()
@@ -256,9 +254,6 @@ void SipApp::hupCall()
     for(int i=0; i < g_players.count(); i++) {
         g_players.at(i)->stop();
     }
-    g_recorder->stop();
-    g_rec_timer.stop();
-
 }
 
 

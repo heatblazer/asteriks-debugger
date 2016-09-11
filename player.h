@@ -14,6 +14,7 @@ public:
     explicit Player(const QString& fname, QObject* parent=nullptr);
     virtual ~Player();
     bool create();
+    void doWork(void* data);
     void play();
     void stop();
 

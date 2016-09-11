@@ -69,6 +69,11 @@ bool Player::create()
     return m_isOk;
 }
 
+void Player::doWork(void *data)
+{
+    // player does nothing now
+}
+
 void Player::play()
 {
     if(!m_isPlaying) {

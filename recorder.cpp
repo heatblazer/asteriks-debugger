@@ -16,6 +16,9 @@
 // console //
 #include "gui.h"
 
+// mutex //
+#include "thread.h"
+#include <QMutex>
 
 namespace izdebug {
 
@@ -25,7 +28,8 @@ Recorder::Recorder(const QString& fname, QObject *parent)
       m_slot(0),
       m_isRecording(false),
       m_fname(fname),
-      m_samples(0)
+      m_samples(0),
+      p_thread(nullptr)
 {
 
     // all was ok ...
@@ -42,6 +46,16 @@ Recorder::~Recorder()
 bool Recorder::create()
 {
     return _create(m_fname.toLatin1().constData());
+}
+
+void Recorder::doWork(void *data)
+{
+    (void) data;
+    QThread* pId = QThread::currentThread();
+    for(;;) {
+        hTimeout2();
+        pId->sleep(50);
+    }
 }
 
 bool Recorder::isRecording()
@@ -110,6 +124,7 @@ void Recorder::stop()
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
                                      getSlot(),
                                      getSink());
+        p_thread->terminate();
         m_isRecording = false;
 
     }
@@ -120,13 +135,16 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
+        p_thread = new Thread(this);
         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
                               p_port, NULL, &m_slot);
-        pjmedia_conf_connect_port(pjsua_var.mconf,
-                                  getSink(),
-                                  getSlot(), 0);
 
-         m_isRecording = true;
+        pjsua_conf_connect(getSink(),
+                           getSlot());
+
+
+        p_thread->start();
+        m_isRecording = true;
     }
     emit recording(true);
 }
@@ -172,33 +190,34 @@ void Recorder::hTimeout()
 
 void Recorder::hTimeout2()
 {
+    std::cout << "Thread call" << std::endl;
+
     if (m_isRecording) {
 
         pjmedia_frame frame;
-        pj_int16_t* framebuf = new pj_int16_t[m_samples];
-
-        if(framebuf==NULL) {
-            return;
-        }
-
         pjmedia_port_get_frame(p_port, &frame);
-        pj_int16_t* bff = (pj_int16_t*)frame.buf;
+
+        pj_int16_t *fbuff = new pj_int16_t[m_samples];
+        memcpy(fbuff, frame.buf, m_samples);
+
 
         // high watermar algorithm
-        int i = 0;
         pj_int16_t hwm = 0;
-        for(; i < PJMEDIA_PIA_SPF(&p_port->info); i++) {
-            if (bff[i] >= hwm) {
-                hwm += bff[i];
+
+        for(int i=0; i < PJMEDIA_PIA_SPF(&p_port->info); ++i) {
+
+            if (fbuff[i]>= hwm) {
+                hwm += fbuff[i];
             } else {
-                hwm = bff[i];
+                hwm = fbuff[i];
             }
+
             Gui::Instance().m_vuMeter.progressBar[1].
                     setValue((unsigned) hwm);
 
         }
     }
-    // else nothing
+
 }
 
 
@@ -235,9 +254,9 @@ void Recorder::hTimeout3()
             } else {
                 hwm = bff[i];
             }
+
             Gui::Instance().m_vuMeter.progressBar[1].
                     setValue((unsigned) hwm);
-
         }
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
     //    pjmedia_conf_get_signal_level(pjsua_var.mconf, getSink(), &tx, &rx);

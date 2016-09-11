@@ -10,6 +10,7 @@
 // parent //
 #include "mediaport.h"
 #include <QTimer>
+#include <QThread>
 
 namespace izdebug {
 
@@ -24,6 +25,7 @@ public:
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
     virtual ~Recorder();
     bool create();
+    void doWork(void* data);
     bool isRecording();
     pjmedia_port* pjPort();
 
@@ -53,6 +55,8 @@ private:
     bool m_isRecording;
     QString m_fname;
     int m_samples;
+
+    QThread* p_thread;
 
 };
 

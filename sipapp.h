@@ -27,8 +27,6 @@ class SipApp : public QObject
 public:
     static QList<Player*> g_players;
     static Recorder*    g_recorder;
-    static QTimer       g_rec_timer;
-
 
 
     static SipApp& Instance();
