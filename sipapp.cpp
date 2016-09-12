@@ -74,6 +74,8 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
             g_players.at(i)->setSink(info.conf_slot);
         }
 
+        g_recorder->start();
+
 
      }
 }
@@ -217,8 +219,6 @@ bool SipApp::create(const QString &uri)
         }
 
         g_recorder->create();
-        g_recorder->start();
-
     }
 
     return m_isCreated;

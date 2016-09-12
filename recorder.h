@@ -58,7 +58,6 @@ private:
     int m_samples;
 
     Thread* p_thread;
-
 };
 
 

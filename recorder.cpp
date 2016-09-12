@@ -18,17 +18,20 @@
 
 // mutex //
 #include "pjsua-thread.h"
+#include <pjlib.h>
 #include <QMutex>
 
 namespace izdebug {
 
 pj_status_t Recorder::entryPoint(void *user_data)
 {
-    Recorder* r = (Recorder*)user_data;
+
+
+    PjThread* t = (PjThread*) user_data;
+    Recorder* r = (Recorder*)t->getPort();
     for(;;)
     {
         r->hTimeout3();
-        std::cout << "Pritn recorder stuff..." << std::endl;
     }
 }
 
@@ -134,7 +137,9 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
+        m_isRecording = true;
         p_thread = new PjThread(this);
+
         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
                               p_port, NULL, &m_slot);
 
@@ -145,8 +150,6 @@ void Recorder::start()
                          this);
 
 
-
-        m_isRecording = true;
     }
     emit recording(true);
 }
@@ -218,7 +221,9 @@ void Recorder::hTimeout2()
 
 void Recorder::hTimeout3()
 {
+
     if (m_isRecording) {
+
         pjmedia_frame frame;
 
         pj_int16_t* framebuf = new pj_int16_t[m_samples];
@@ -230,10 +235,9 @@ void Recorder::hTimeout3()
 
         unsigned ms=0;
 
-        if(!p_port || !frame.buf) {
-            return;
-        }
+
         pjmedia_port_get_frame(p_port, &frame);
+
 
         pj_int32_t level32;
         int level;
@@ -242,16 +246,13 @@ void Recorder::hTimeout3()
                                             PJMEDIA_PIA_SPF(&p_port->info));
 
         level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
+
         unsigned tx, rx;
-
-
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
-        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSink(), &tx, &rx);
 
-
-    Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
-    Gui::Instance().m_vuMeter.progressBar[0].setValue(rx);
-
+        pj_thread_sleep(100);
+        Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
+        Gui::Instance().m_vuMeter.progressBar[1].setValue(rx);
     }
 
 }
