@@ -44,7 +44,8 @@ SOURCES += main.cpp \
     confbridge.cpp \
     mediaport.cpp \
     player.cpp \
-    thread.cpp
+    thread.cpp \
+    pjusa-thread.cpp
 
 HEADERS  += \
     gui.h \
@@ -55,6 +56,7 @@ HEADERS  += \
     confbridge.h \
     mediaport.h \
     player.h \
-    thread.h
+    thread.h \
+    pjsua-thread.h
 
 FORMS    +=

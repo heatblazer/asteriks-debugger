@@ -9,6 +9,7 @@
 
 // parent //
 #include "mediaport.h"
+#include "pjsua-thread.h"
 #include <QTimer>
 #include <QThread>
 
@@ -20,12 +21,12 @@ class Recorder : public MediaPort
 {
     Q_OBJECT
 public:
-    static int entryPoint(void* user_data);
+    // pjsuatrhead api
+    static pj_status_t entryPoint(void* user_data);
 
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
     virtual ~Recorder();
     bool create();
-    void doWork(void* data);
     bool isRecording();
     pjmedia_port* pjPort();
 
@@ -56,7 +57,7 @@ private:
     QString m_fname;
     int m_samples;
 
-    QThread* p_thread;
+    Thread* p_thread;
 
 };
 

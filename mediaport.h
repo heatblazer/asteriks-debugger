@@ -16,8 +16,6 @@ class MediaPort : public QObject
 {
 public:
     virtual bool create()=0;
-    virtual void doWork(void*)=0; // play and rec forced to implement it
-                                // because mediaport abst can`t do a thing
     virtual bool isAdded();
     virtual void setSlot(unsigned slot);
     virtual unsigned getSlot();

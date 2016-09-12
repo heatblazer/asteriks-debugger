@@ -1,5 +1,5 @@
 #include "recorder.h"
-
+#define PJTHR_STACK_SIZE 128*1024
 // pjlib //
 #include "pjsua-lib/pjsua_internal.h"
 #include <pjsua.h>
@@ -17,10 +17,20 @@
 #include "gui.h"
 
 // mutex //
-#include "thread.h"
+#include "pjsua-thread.h"
 #include <QMutex>
 
 namespace izdebug {
+
+pj_status_t Recorder::entryPoint(void *user_data)
+{
+    Recorder* r = (Recorder*)user_data;
+    for(;;)
+    {
+        r->hTimeout3();
+        std::cout << "Pritn recorder stuff..." << std::endl;
+    }
+}
 
 Recorder::Recorder(const QString& fname, QObject *parent)
     : MediaPort(parent),
@@ -46,16 +56,6 @@ Recorder::~Recorder()
 bool Recorder::create()
 {
     return _create(m_fname.toLatin1().constData());
-}
-
-void Recorder::doWork(void *data)
-{
-    (void) data;
-    QThread* pId = QThread::currentThread();
-    for(;;) {
-        hTimeout2();
-        pId->sleep(50);
-    }
 }
 
 bool Recorder::isRecording()
@@ -124,7 +124,6 @@ void Recorder::stop()
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
                                      getSlot(),
                                      getSink());
-        p_thread->terminate();
         m_isRecording = false;
 
     }
@@ -135,15 +134,18 @@ void Recorder::start()
 {
     // start to record
     if (!m_isRecording) {
-        p_thread = new Thread(this);
+        p_thread = new PjThread(this);
         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
                               p_port, NULL, &m_slot);
 
         pjsua_conf_connect(getSink(),
                            getSlot());
+        ((PjThread*)p_thread)->p_entry = &Recorder::entryPoint;
+        p_thread->create(PJTHR_STACK_SIZE, 0, PjThread::thEntryPoint,
+                         this);
 
 
-        p_thread->start();
+
         m_isRecording = true;
     }
     emit recording(true);
@@ -190,20 +192,14 @@ void Recorder::hTimeout()
 
 void Recorder::hTimeout2()
 {
-    std::cout << "Thread call" << std::endl;
-
     if (m_isRecording) {
 
         pjmedia_frame frame;
         pjmedia_port_get_frame(p_port, &frame);
 
-        pj_int16_t *fbuff = new pj_int16_t[m_samples];
-        memcpy(fbuff, frame.buf, m_samples);
-
-
         // high watermar algorithm
         pj_int16_t hwm = 0;
-
+#if 0
         for(int i=0; i < PJMEDIA_PIA_SPF(&p_port->info); ++i) {
 
             if (fbuff[i]>= hwm) {
@@ -211,12 +207,11 @@ void Recorder::hTimeout2()
             } else {
                 hwm = fbuff[i];
             }
-
+#endif
             Gui::Instance().m_vuMeter.progressBar[1].
                     setValue((unsigned) hwm);
 
         }
-    }
 
 }
 
@@ -229,11 +224,15 @@ void Recorder::hTimeout3()
         pj_int16_t* framebuf = new pj_int16_t[m_samples];
 
         if(framebuf==NULL) {
+            delete[] framebuf;
             return;
         }
 
         unsigned ms=0;
 
+        if(!p_port || !frame.buf) {
+            return;
+        }
         pjmedia_port_get_frame(p_port, &frame);
 
         pj_int32_t level32;
@@ -244,25 +243,15 @@ void Recorder::hTimeout3()
 
         level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
         unsigned tx, rx;
-        pj_int16_t* bff = (pj_int16_t*)frame.buf;
 
-        // high watermar algorithm
-        pj_int16_t hwm = 0;
-        for(int i=0; i < PJMEDIA_PIA_SPF(&p_port->info); i++) {
-            if (bff[i] >= hwm) {
-                hwm += bff[i];
-            } else {
-                hwm = bff[i];
-            }
 
-            Gui::Instance().m_vuMeter.progressBar[1].
-                    setValue((unsigned) hwm);
-        }
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
-    //    pjmedia_conf_get_signal_level(pjsua_var.mconf, getSink(), &tx, &rx);
+        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSink(), &tx, &rx);
 
 
-//    Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
+    Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
+    Gui::Instance().m_vuMeter.progressBar[0].setValue(rx);
+
     }
 
 }

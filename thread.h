@@ -1,23 +1,28 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include <QThread>
+#include "defs.h"
 
 namespace izdebug {
 
 class MediaPort;
 
-class Thread : public QThread
+class Thread
 {
+public:
+    static int thEntryPoint(int argc, void* argv);
 
 public:
-    explicit Thread(MediaPort *mp, QObject* parent=nullptr);
-    virtual ~Thread();
+    virtual ~Thread()=0;
+    virtual bool create(int stack_size, int prio, thCb epoint, void* udata)=0;
+    virtual void join()=0;
+    virtual void* getCurrentThread()=0;
 
-    void run();
 
-private:
+protected:
+    // later refractor
     MediaPort* m_port; // aggregation
+    void* usr_data;
 };
 
 

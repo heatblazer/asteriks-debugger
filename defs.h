@@ -17,6 +17,8 @@
 #   define MATH_PI  (3.14159265)
 #endif
 
+typedef int (*thCb)(int, void*);
+typedef pj_status_t (*pjThrEpoint)(void*);
 
 union port_data {
     pj_int16_t *buff;
