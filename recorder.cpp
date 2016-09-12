@@ -72,7 +72,7 @@ Recorder::Recorder(const QString& fname, QObject *parent)
 Recorder::~Recorder()
 {
     if (m_isOk) {
-        _disconnect_and_remove();
+
     }
 }
 
@@ -194,6 +194,7 @@ void Recorder::stop()
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
                                      getSlot(),
                                      getSink());
+        p_thread->join();
         m_isRecording = false;
 
     }
@@ -220,12 +221,38 @@ void Recorder::start()
     emit recording(true);
 }
 
-
+/// deprecated name
+/// \brief Recorder::hTimeout3
+///
 void Recorder::hTimeout3()
 {
     if (m_isRecording) {
 
-        pjmedia_frame frame, frame2;
+        pjmedia_frame frm;
+        unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
+
+        frm.buf = Pool::Instance().zero_alloc(spf);
+        pj_int16_t* smpls = new pj_int16_t[spf];
+        pj_int16_t hwm=0;
+
+
+        pj_status_t s = pjmedia_port_put_frame(p_port, &frm);
+        if (s != PJ_SUCCESS) {
+            return;
+        }
+
+        std::cout <<"GOT FRAME" << std::endl;
+        static pj_int16_t last = 0;
+        // analyze highest value of the current frame
+        if(frm.buf) {
+            memcpy(smpls, (pj_int16_t*)frm.buf, spf);
+            for(int i=0; i < spf; i++) {
+                pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
+                if (hwm < abs_val ) {
+                    hwm = abs_val;
+                }
+            }
+        }
 
         pj_int16_t* framebuf = new pj_int16_t[m_samples];
         pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
@@ -235,17 +262,12 @@ void Recorder::hTimeout3()
         unsigned tx, rx;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
 
-        pj_thread_sleep(50);
+        pj_thread_sleep(100);
 
-        Gui::Instance().m_vuMeter.progressBar[0].setValue(tx);
+        Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(rx);
     }
-
 }
 
-void Recorder::_disconnect_and_remove()
-{
-
-}
 
 } // namespace izdebug

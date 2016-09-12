@@ -163,7 +163,7 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
-        m_vuMeter.label[0].setText("coef. x 4369");
+        m_vuMeter.label[0].setText("coef. X 4369");
         m_vuMeter.progressBar[0].setMinimumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximum(65535);
@@ -271,9 +271,9 @@ void Gui::hClicked2()
 {
     m_widget[0].button1.setDisabled(false);
     p_sipApp->hupCall();
+
     m_vuMeter.progressBar[0].setValue(0);
     m_vuMeter.progressBar[1].setValue(0);
-
 }
 
 bool Gui::call()

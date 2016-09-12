@@ -19,8 +19,6 @@ private:
 
 class Thread
 {
-public:
-    static int thEntryPoint(int argc, void* argv);
 
 public:
     virtual ~Thread()=0;
@@ -28,7 +26,6 @@ public:
     virtual void join()=0;
     virtual void* getCurrentThread()=0;
     virtual MediaPort* getPort();
-
 
 protected:
     // later refractor

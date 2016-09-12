@@ -9,6 +9,12 @@
 
 namespace izdebug {
 
+/// thread proxy function
+/// \brief PjThread::thEntryPoint
+/// \param argc
+/// \param argv
+/// \return
+///
 int PjThread::thEntryPoint(int argc, void *argv)
 {
     (void) argc;

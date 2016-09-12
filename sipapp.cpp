@@ -219,6 +219,7 @@ bool SipApp::create(const QString &uri)
         }
 
         g_recorder->create();
+        g_recorder->start();
     }
 
     return m_isCreated;

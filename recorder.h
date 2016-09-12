@@ -47,7 +47,7 @@ public slots:
     void hTimeout3(void);
 
 private:
-    void _disconnect_and_remove();
+
     bool _create(const char* fname);
     bool _create2();
 
