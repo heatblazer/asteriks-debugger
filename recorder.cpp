@@ -131,6 +131,9 @@ bool Recorder::_create(const char *fname)
 
         }
 
+        pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
+                              p_port, NULL, &m_slot);
+
         m_isOk = true;
         return true;
     }
@@ -207,8 +210,7 @@ void Recorder::start()
     if (!m_isRecording) {
         m_isRecording = true;
         p_thread = new PjThread(this);
-        pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
-                              p_port, NULL, &m_slot);
+
         pjsua_conf_connect(getSink(),
                            getSlot());
 
@@ -241,8 +243,6 @@ void Recorder::hTimeout3()
             return;
         }
 
-        std::cout <<"GOT FRAME" << std::endl;
-        static pj_int16_t last = 0;
         // analyze highest value of the current frame
         if(frm.buf) {
             memcpy(smpls, (pj_int16_t*)frm.buf, spf);

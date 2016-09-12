@@ -117,6 +117,7 @@ private:
 
     } m_vuMeter;
 
+
     Console*     p_console;
     QFileDialog m_fileBrowser;
     SipApp*     p_sipApp;

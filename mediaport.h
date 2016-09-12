@@ -6,7 +6,7 @@
 
 // pjmedia //
 #include <pjmedia.h>
-
+#include <pjsua.h>
 
 namespace izdebug {
 
@@ -22,6 +22,7 @@ public:
     virtual void setSink(unsigned sink);
     virtual unsigned getSink();
     virtual pjmedia_port* toPj();
+    virtual bool connect(pjsua_conf_port_id src, pjsua_conf_port_id dst);
 
 protected:
     explicit MediaPort(QObject* parent=nullptr);

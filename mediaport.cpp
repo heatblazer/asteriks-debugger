@@ -43,6 +43,15 @@ pjmedia_port *MediaPort::toPj()
     return p_port;
 }
 
+bool MediaPort::connect(pjsua_conf_port_id src, pjsua_conf_port_id dst)
+{
+    pj_status_t s = pjsua_conf_connect(src, dst);
+    if (s != PJ_SUCCESS) {
+        return false;
+    }
+    return true;
+}
+
 void MediaPort::setSink(unsigned sink)
 {
     m_sink = sink;
