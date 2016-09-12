@@ -114,7 +114,7 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
             conf_info.rx_level_adj, conf_info.tx_level_adj,
             conf_info.samples_per_frame, conf_info.bits_per_sample);
 
-    Console::Instance().putData(QByteArray(con));
+    //Console::Instance().putData(QByteArray(con));
 
     // play PCMU to the port
 }

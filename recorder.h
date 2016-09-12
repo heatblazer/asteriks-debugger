@@ -22,6 +22,9 @@ class Recorder : public MediaPort
     Q_OBJECT
 public:
     // pjsuatrhead api
+    static pj_status_t my_get_frame(pjmedia_port* port, pjmedia_frame* frame);
+    static pj_status_t my_put_frame(pjmedia_port* port, pjmedia_frame* frame);
+
     static pj_status_t entryPoint(void* user_data);
 
     explicit Recorder(const QString& fname, QObject* parent=nullptr);
@@ -41,13 +44,12 @@ public:
     void start();
 
 public slots:
-    void hTimeout(void);
-    void hTimeout2(void);
     void hTimeout3(void);
 
 private:
     void _disconnect_and_remove();
     bool _create(const char* fname);
+    bool _create2();
 
 
 private:
@@ -56,6 +58,7 @@ private:
     bool m_isRecording;
     QString m_fname;
     int m_samples;
+    pj_int16_t* p_smp_data;
 
     Thread* p_thread;
 };

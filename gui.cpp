@@ -163,10 +163,10 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
-        m_vuMeter.label[0].setText("VU METER (TX)");
+        m_vuMeter.label[0].setText("coef. x 4369");
         m_vuMeter.progressBar[0].setMinimumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximumSize(50, 300);
-        m_vuMeter.progressBar[0].setMaximum(300);
+        m_vuMeter.progressBar[0].setMaximum(65535);
         m_vuMeter.progressBar[0].setTextVisible(true);
         m_vuMeter.progressBar[1].setTextVisible(true);
 
