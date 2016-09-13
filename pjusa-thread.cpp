@@ -38,7 +38,7 @@ bool PjMutex::tryLock()
     return true;
 }
 
-/// thread proxy function
+/// thread proxy function for different thread implemenations
 /// \brief PjThread::thEntryPoint
 /// \param argc
 /// \param argv
