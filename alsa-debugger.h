@@ -1,0 +1,4 @@
+#ifndef ALSADEBUGGER_H
+#define ALSADEBUGGER_H
+
+#endif // ALSADEBUGGER_H
