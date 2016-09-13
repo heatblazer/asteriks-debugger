@@ -20,7 +20,6 @@ public:
 
     pj_pool_t*  p_pool;
     pj_caching_pool m_cpool;
-
     static Pool* s_inst;
 };
 

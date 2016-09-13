@@ -9,12 +9,12 @@
 
 namespace izdebug {
 
-Player::Player(const QString &fname)
+Player::Player(const char* fname)
     : MediaPort(),
       p_sndPort(nullptr),
       m_isPlaying(false)
 {
-    m_fname=fname;    
+    snprintf(m_fname, 256, "%s", fname);
 }
 
 Player::~Player()
@@ -34,7 +34,7 @@ bool Player::create()
         }
 
         pj_status_t s = pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
-                                       m_fname.toLatin1().constData(),
+                                       m_fname,
                                        PJMEDIA_PIA_CCNT(&conf->info),
                                        0, 0,
                                        &p_port
@@ -55,7 +55,7 @@ bool Player::create()
                                     &p_sndPort);
 
         if (s != PJ_SUCCESS) {
-            //
+            return m_isOk;
         }
 
         {
@@ -72,6 +72,7 @@ bool Player::create()
 
 void Player::doWork(void *data)
 {
+    (void) data;
     // player does nothing now
 }
 
@@ -80,7 +81,6 @@ void Player::play()
     if(!m_isPlaying) {
         // pjmedia
          pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
-
         m_isPlaying = true;   
     }
 }
@@ -89,7 +89,6 @@ void Player::stop()
 {
 
     if(m_isPlaying) {
-
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
                                      getSlot(),
                                      getSrc());
@@ -100,11 +99,9 @@ void Player::stop()
 void Player::playToConf()
 {
     if (!m_isPlaying) {
-        std::cout << "Play.." << std::endl;
         play();
 
     } else {
-        std::cout << "Stop.." << std::endl;
         stop();
     }
 }

@@ -3,14 +3,12 @@
 
 #include "mediaport.h"
 
-#include <QTimer>
-
 namespace izdebug {
 
 class Player : public MediaPort
 {
 public:
-    explicit Player(const QString& fname);
+    explicit Player(const char *fname);
     virtual ~Player();
     bool create();
     void doWork(void* data);
@@ -22,7 +20,7 @@ private:
     void _disconnect_and_remove();
 private:
     pjmedia_snd_port* p_sndPort;
-    QString m_fname;
+    char    m_fname[256];
     bool    m_isPlaying;
 
 };

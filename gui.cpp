@@ -153,6 +153,7 @@ Gui::Gui(QWidget *parent)
         }
 #endif
 
+
         m_widget[2].layout.addLayout(&m_widget[2].layout2);
 
 
