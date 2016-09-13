@@ -70,17 +70,23 @@ signals:
 
 private slots:
     void hTextChange();
+
     void hClicked1();
     void hClicked2();
+    void hClicked3();
+
     void hClear();
     void hLoadWav();
     void playFile();
+
     void updateVuMeterTx();
     void updateVuMeterRx();
     void updateVuTxRx(unsigned tx, unsigned rx);
+
     void hOnCallMediaState();
     void makeACall(const char* str);
 
+    void appQuit();
 
 private:
     explicit Gui(QWidget *parent=nullptr);
@@ -98,12 +104,16 @@ private:
         QTextEdit   text;
         QPushButton button1;
         QPushButton button2;
-        QPushButton button3; // for stop player for now
+        QPushButton button3; // echo call to self
+        QVBoxLayout layout;
+    } m_call_widget;
+
+    struct {
+        QTextEdit text;
         QPushButton tones[4];
         QVBoxLayout layout;
         QHBoxLayout layout2;
-
-    } m_widget[3];
+    } m_tones_widget;
 
 
     // implement vu logic
@@ -117,6 +127,11 @@ private:
         Ruler*         rulerrx;
 
     } m_vuMeter;
+
+    struct {
+        QPushButton button;
+        QVBoxLayout layout;
+    } m_aux_menu;
 
 
     Console*     p_console;

@@ -46,8 +46,10 @@ SOURCES += main.cpp \
     confbridge.cpp \
     mediaport.cpp \
     player.cpp \
-    thread.cpp \
-    pjusa-thread.cpp
+    alsa-debugger.cpp \
+    Utils/ring-buffer.cpp \
+    Concurent/pjusa-thread.cpp \
+    Concurent/thread.cpp
 
 HEADERS  += \
     gui.h \
@@ -58,8 +60,6 @@ HEADERS  += \
     confbridge.h \
     mediaport.h \
     player.h \
-    thread.h \
-    pjsua-thread.h \
     External/kfr/base/abs.hpp \
     External/kfr/base/asin_acos.hpp \
     External/kfr/base/atan.hpp \
@@ -151,6 +151,10 @@ HEADERS  += \
     External/kfr/dsp.hpp \
     External/kfr/io.hpp \
     External/kfr/math.hpp \
-    External/kfr/version.hpp
+    External/kfr/version.hpp \
+    alsa-debugger.h \
+    Utils/ring-buffer.h \
+    Concurent/pjsua-thread.h \
+    Concurent/thread.h
 
 FORMS    +=

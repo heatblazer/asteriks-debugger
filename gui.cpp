@@ -2,18 +2,18 @@
 
 // qt headers //
 #include <QPainter>
-
-// test only //
-#include <iostream>
+#include <QThread>
+#include <QApplication>
 
 // sip app //
 #include "sipapp.h"
+#include "mem-pool.h"
 
-#include <QThread>
-
+// custom stuff //
 #include "recorder.h"
 #include "player.h"
 
+// pjlib //
 #include <pjlib-util/cli.h>
 #include <pjlib-util/cli_imp.h>
 #include <pjlib-util/cli_console.h>
@@ -21,7 +21,6 @@
 #include <pjlib-util/errno.h>
 #include <pjlib.h>
 
-#include "mem-pool.h"
 
 /// aux function to determine strlen
 /// \brief aux_strlen
@@ -73,13 +72,17 @@ Gui::Gui(QWidget *parent)
       p_sipApp(nullptr)
 
 {
-    p_sipApp = &SipApp::Instance();
-    if(p_sipApp->create("sip:6016@192.168.32.89")) {
+    // first init the sip application
+    // conf, account, register ports, etc.
+    {
+        p_sipApp = &SipApp::Instance();
+        if(p_sipApp->create("sip:6016@192.168.32.89")) {
 
-    } else {
-        // maybe handle it
+        } else {
+            // maybe handle it
+        }
+
     }
-
 
     // console instance for messages
     {
@@ -91,76 +94,56 @@ Gui::Gui(QWidget *parent)
     setMaximumSize(QSize(1024, 480));
     // setup widget for dialing
     {
-        m_widget[0].text.setMinimumSize(200, 25);
-        m_widget[0].text.setMaximumSize(200, 25);
+        m_call_widget.text.setMinimumSize(200, 25);
+        m_call_widget.text.setMaximumSize(200, 25);
 
-        m_widget[0].button1.setText("DIAL");
-        m_widget[0].button1.setMaximumSize(100, 25);
-        m_widget[0].button1.setMinimumSize(100, 25);
+        m_call_widget.button1.setText("DIAL");
+        m_call_widget.button1.setMaximumSize(100, 25);
+        m_call_widget.button1.setMinimumSize(100, 25);
 
-        m_widget[0].button2.setText("HUP");
-        m_widget[0].button2.setMaximumSize(100, 25);
-        m_widget[0].button2.setMinimumSize(100, 25);
+        m_call_widget.button2.setText("HUP");
+        m_call_widget.button2.setMaximumSize(100, 25);
+        m_call_widget.button2.setMinimumSize(100, 25);
 
-        m_widget[0].layout.addWidget(&m_widget[0].text, 0, Qt::AlignRight);
-        m_widget[0].layout.addWidget(&m_widget[0].button1, 0, Qt::AlignRight);
-        m_widget[0].layout.addWidget(&m_widget[0].button2, 0, Qt::AlignRight);
-    }
+        m_call_widget.button3.setText("Echo test");
+        m_call_widget.button3.setMaximumSize(100, 25);
+        m_call_widget.button3.setMinimumSize(100, 25);
 
-    // I`ll use that widget composition for the tonegen
-    {
-        m_widget[1].text.setMinimumSize(200, 25);
-        m_widget[1].text.setMaximumSize(200, 25);
-
-        m_widget[1].button1.setText("Generate sine tone");
-        m_widget[1].button1.setMaximumSize(125, 25);
-        m_widget[1].button1.setMinimumSize(125, 25);
-        m_widget[1].layout.addWidget(&m_widget[1].text, 0, Qt::AlignRight);
-        m_widget[1].layout.addWidget(&m_widget[1].button1, 0, Qt::AlignRight);
+        m_call_widget.layout.addWidget(&m_call_widget.text, 0, Qt::AlignRight);
+        m_call_widget.layout.addWidget(&m_call_widget.button1, 0, Qt::AlignRight);
+        m_call_widget.layout.addWidget(&m_call_widget.button2, 0, Qt::AlignRight);
+        m_call_widget.layout.addWidget(&m_call_widget.button3, 0, Qt::AlignRight);
 
     }
 
+    // setup tonegen widget
     {
-        // extra button to stop
 
-        m_widget[2].text.setMinimumSize(200, 25);
-        m_widget[2].text.setMaximumSize(200, 25);
-        m_widget[2].text.setEnabled(false);
-
-#if 0
-        m_widget[2].button1.setText("Open WAV");
-        m_widget[2].button2.setText("Play file");
-        m_widget[2].button3.setText("Stop WAV");
-#endif
-        m_widget[2].tones[0].setText("1k0db");
-        m_widget[2].tones[1].setText("1k-6db");
-        m_widget[2].tones[2].setText("1k-12db");
-        m_widget[2].tones[3].setText("1k-24db");
-
-
+        m_tones_widget.tones[0].setText("1k0db");
+        m_tones_widget.tones[1].setText("1k-6db");
+        m_tones_widget.tones[2].setText("1k-12db");
+        m_tones_widget.tones[3].setText("1k-24db");
 
         for(int i=0; i < 4; i++) {
-            m_widget[2].tones[i].setMinimumSize(80, 30);
-            m_widget[2].tones[i].setMaximumSize(80, 30);
-            m_widget[2].layout2.addWidget(&m_widget[2].tones[i]);
+            m_tones_widget.tones[i].setMinimumSize(80, 30);
+            m_tones_widget.tones[i].setMaximumSize(80, 30);
+            m_tones_widget.layout2.addWidget(&m_tones_widget.tones[i]);
             // connect to players
          }
+        m_tones_widget.layout.addLayout(&m_tones_widget.layout2);
+    }
+
 #if 0
         for(int i=0; i < SipApp::g_players.count(); i++) {
             Player* p = SipApp::g_players.at(i);
-            connect(&m_widget[2].tones[i], SIGNAL(clicked(bool)),
+            connect(&m_tones_widget.tones[i], SIGNAL(clicked(bool)),
                     this, SLOT(playToConf()));
         }
 #endif
 
 
-        m_widget[2].layout.addLayout(&m_widget[2].layout2);
-
-
-    }
-    // vu meter connect to the higheest signal
+    // vu meter initialization
     {
-
 
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
@@ -199,9 +182,23 @@ Gui::Gui(QWidget *parent)
 
     }
 
-    m_rvbox.addLayout(&m_widget[0].layout);
-    m_rvbox.addLayout(&m_widget[1].layout);
-    m_rvbox.addLayout(&m_widget[2].layout);
+    // aux widges initializaion
+    // quit button for now
+    {
+        m_aux_menu.button.setText("QUIT");
+        m_aux_menu.button.setMinimumSize(90, 90);
+        m_aux_menu.button.setMaximumSize(90, 90);
+        m_aux_menu.layout.addWidget(&m_aux_menu.button, 0, Qt::AlignRight);
+        connect(&m_aux_menu.button, SIGNAL(clicked(bool)),
+                QApplication::instance(), SLOT(quit()));
+    }
+
+
+
+    m_rvbox.addLayout(&m_call_widget.layout);
+    //m_rvbox.addLayout(&m_widget[1].layout);
+    m_rvbox.addLayout(&m_tones_widget.layout);
+    m_rvbox.addLayout(&m_aux_menu.layout);
     m_midbox.addLayout(&m_vuMeter.layout, Qt::AlignBottom);
 
     m_lvbox.addWidget(p_console, 0, Qt::AlignLeft);
@@ -214,9 +211,11 @@ Gui::Gui(QWidget *parent)
 
     // setup slots / signals of dial box
     {
-        connect(&m_widget[0].button2, SIGNAL(clicked(bool)),
+        connect(&m_call_widget.button3, SIGNAL(clicked(bool)),
+                this, SLOT(hClicked3()));
+        connect(&m_call_widget.button2, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked2()));
-        connect(&m_widget[0].button1, SIGNAL(clicked(bool)),
+        connect(&m_call_widget.button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked1()));
         connect(this, SIGNAL(sendUri(const char*)),
                 this, SLOT(makeACall(const char*)));
@@ -225,19 +224,20 @@ Gui::Gui(QWidget *parent)
      }
 
     // setup slots/signals of debug sound
+#if 0
     {
         connect(&m_widget[1].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClear()));
 
     }
-
+#endif
     // load WAV file
     {
-        connect(&m_widget[2].text, SIGNAL(textChanged()),
+        connect(&m_tones_widget.text, SIGNAL(textChanged()),
                 this, SLOT(hTextChange()), Qt::DirectConnection);
 
         connect(&m_fileBrowser, SIGNAL(fileSelected(QString)),
-                &m_widget[2].text, SLOT(append(QString)));
+                &m_tones_widget.text, SLOT(append(QString)));
 
     }
 
@@ -245,7 +245,7 @@ Gui::Gui(QWidget *parent)
 
 Gui::~Gui()
 {
-    std::cout << "Gui destroyed" << std::endl;
+
     if (p_console != nullptr) {
         p_console = nullptr;
     }
@@ -258,35 +258,39 @@ Gui::~Gui()
 
 void Gui::hTextChange()
 {
-    std::cout << m_widget[2].text.toPlainText().toStdString() << std::endl;
 }
 
 void Gui::hClicked1()
 {
 
     if (call()) {
-        m_widget[0].button1.setDisabled(true);
+        m_call_widget.button1.setDisabled(true);
     }
 
 }
 
 void Gui::hClicked2()
 {
-    m_widget[0].button1.setDisabled(false);
+    m_call_widget.button1.setDisabled(false);
     p_sipApp->hupAllCalls();
 
     m_vuMeter.progressBar[0].setValue(0);
     m_vuMeter.progressBar[1].setValue(0);
 }
 
+void Gui::hClicked3()
+{
+
+}
+
 bool Gui::call()
 {
     // send the string to sip!
-    char* data = m_widget[0].text.toPlainText().toLatin1().data();
+    char* data = m_call_widget.text.toPlainText().toLatin1().data();
     trim(data);
     char tel[64]={0};
     sprintf(tel, "%s", data);
-    if(!m_widget[0].text.toPlainText().isEmpty() &&
+    if(!m_call_widget.text.toPlainText().isEmpty() &&
         _isValidDigit(tel)) {
         // OK send to server
         char uri[256]={0};
@@ -294,7 +298,7 @@ bool Gui::call()
         emit sendUri(uri);
         return true;
     }
-    std::cout << "ERROR IN DIGITS!" << std::endl;
+    Console::Instance().putData(QByteArray("Error in digits!"));
     return false;
 }
 
@@ -310,10 +314,9 @@ void Gui::hLoadWav()
 
 void Gui::playFile()
 {
-    std::cout << "Playing file..." << std::endl;
-    if (!m_widget[2].text.toPlainText().isEmpty()) {
-        std::cout << m_widget[2].text.toPlainText().toStdString() << std::endl;
-        const char* s = m_widget[2].text.toPlainText().toLatin1().constData();
+
+    if (!m_tones_widget.text.toPlainText().isEmpty()) {
+        const char* s = m_tones_widget.text.toPlainText().toLatin1().constData();
 
     }
 }
@@ -361,6 +364,11 @@ void Gui::hOnCallMediaState()
 void Gui::makeACall(const char *str)
 {
     p_sipApp->makeACall(str);
+}
+
+void Gui::appQuit()
+{
+    this->destroy();
 }
 
 
@@ -422,7 +430,6 @@ Console::Console(QPlainTextEdit *parent)
 
 Console::~Console()
 {
-    std::cout << "Deleted console!" << std::endl;
 }
 
 void Console::putData(const QByteArray &data)
