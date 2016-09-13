@@ -7,16 +7,6 @@ namespace izdebug {
 
 class MediaPort;
 
-class SpinLock
-{
-public:
-    static void lock();
-    static void unlock();
-
-private:
-    static volatile int m_lock;
-};
-
 
 class Mutex
 {

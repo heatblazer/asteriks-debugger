@@ -39,20 +39,12 @@ public:
         unsigned slot;
     } m_player; // no snd device attached
 
-signals:
-    void sendFrame(pjmedia_frame* frm);
-    void recording(bool);
-    void sendRxTx(unsigned tx, unsigned rx);
-
 
 public:
     void stop();
     void start();
-
     void connectPlayer(unsigned src);
-
-public slots:
-    void hTimeout3(void);
+    void doWork(void);
 
 private:
 

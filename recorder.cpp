@@ -50,7 +50,7 @@ pj_status_t Recorder::entryPoint(void *user_data)
     Recorder* r = (Recorder*)t->getPort();
     for(;;)
     {
-        r->hTimeout3();
+        r->doWork();
     }
 }
 
@@ -230,8 +230,6 @@ void Recorder::stop()
     }
     Gui::Instance().m_vuMeter.progressBar[0].setValue(0);
     Gui::Instance().m_vuMeter.progressBar[1].setValue(0);
-
-    emit recording(false);
 }
 
 void Recorder::start()
@@ -250,14 +248,10 @@ void Recorder::start()
                          this);
 
     }
-    emit recording(true);
 }
 
 
-/// deprecated name
-/// \brief Recorder::hTimeout3
-///
-void Recorder::hTimeout3()
+void Recorder::doWork()
 {
     if (m_isRecording) {
 

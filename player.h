@@ -9,9 +9,8 @@ namespace izdebug {
 
 class Player : public MediaPort
 {
-    Q_OBJECT
 public:
-    explicit Player(const QString& fname, QObject* parent=nullptr);
+    explicit Player(const QString& fname);
     virtual ~Player();
     bool create();
     void doWork(void* data);

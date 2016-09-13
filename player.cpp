@@ -9,8 +9,8 @@
 
 namespace izdebug {
 
-Player::Player(const QString &fname, QObject *parent)
-    : MediaPort(parent),
+Player::Player(const QString &fname)
+    : MediaPort(),
       p_sndPort(nullptr),
       m_isPlaying(false)
 {
