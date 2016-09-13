@@ -76,8 +76,10 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
                                unsigned stream_idx, pjmedia_port **p_port)
 {
     (void)p_port;
+    static char txt[256]={0};
+    sprintf(txt, "Call id: [%d]\n", call_id);
+    Console::Instance().putData(QByteArray(txt));
 
-    std::cout << "Call id: " << call_id << std::endl;
     pjsua_stream_info info;
     pjsua_call_get_stream_info(call_id, stream_idx, &info);
 
@@ -112,9 +114,8 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 }
 
 
-SipApp::SipApp(QObject *parent)
-    : QObject(parent),
-      m_current_slot(-1),
+SipApp::SipApp()
+    : m_current_slot(-1),
       m_isCreated(false)
 {
 
@@ -123,7 +124,6 @@ SipApp::SipApp(QObject *parent)
     g_players.append(new Player("assets/1k-12db.wav"));
     g_players.append(new Player("assets/1k-24db.wav"));
     g_recorder = new Recorder("test_rec.wav");
-
 
 }
 
@@ -157,6 +157,7 @@ bool SipApp::create(const QString &uri)
             cfg.cb.on_call_state = &SipApp::on_call_state;
             cfg.cb.on_stream_created = &SipApp::on_stream_created;
 
+
             status = pjsua_init(&cfg, NULL, NULL);
 
             if (status != PJ_SUCCESS) {
@@ -173,7 +174,6 @@ bool SipApp::create(const QString &uri)
             if (status != PJ_SUCCESS) {
                 return false;
             }
-
         }
 
         // start pjsua
@@ -241,7 +241,7 @@ void SipApp::makeACall(const char* uri)
 
 }
 
-void SipApp::hupCall()
+void SipApp::hupAllCalls()
 {
     pjsua_call_hangup_all();
     for(int i=0; i < g_players.count(); i++) {

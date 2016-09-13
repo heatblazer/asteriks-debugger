@@ -21,9 +21,9 @@ namespace izdebug {
 class Call;
 class Recorder;
 
-class SipApp : public QObject
+class SipApp
 {
-    Q_OBJECT
+
 public:
     static QList<Player*> g_players;
     static Recorder*    g_recorder;
@@ -51,16 +51,11 @@ public:
     void setConfSlot(pjsua_conf_port_id conf_slot);
     int getConfSlot(void);
 
-signals:
-    void onCallMediaState();
-
-public slots:
-
     void makeACall(const char *uri);
-    void hupCall(void);
+    void hupAllCalls(void);
 
 public:
-    explicit SipApp(QObject* parent=nullptr);
+    explicit SipApp();
     virtual ~SipApp();
 
     static SipApp* s_instance;
