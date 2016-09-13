@@ -64,7 +64,6 @@ bool Player::create()
 
             //pjmedia_snd_port_connect(p_sndPort, p_port);
         }
-        m_timer.setInterval(100);
         m_isOk = true;
     }
 
@@ -82,10 +81,8 @@ void Player::play()
         // pjmedia
          pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
 
-        m_isPlaying = true;
-        m_timer.start();
+        m_isPlaying = true;   
     }
-    emit update(m_isPlaying);
 }
 
 void Player::stop()
@@ -97,9 +94,7 @@ void Player::stop()
                                      getSlot(),
                                      getSrc());
         m_isPlaying = false;
-        m_timer.stop();
     }
-    emit update(m_isPlaying);
 }
 
 void Player::playToConf()

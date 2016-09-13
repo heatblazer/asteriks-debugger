@@ -16,12 +16,6 @@ public:
     void doWork(void* data);
     void play();
     void stop();
-
-signals:
-    void update(bool s);
-    void sendRxTx(unsigned rx, unsigned tx);
-
-public slots:
     void playToConf();
 
 private:
@@ -30,7 +24,6 @@ private:
     pjmedia_snd_port* p_sndPort;
     QString m_fname;
     bool    m_isPlaying;
-    QTimer  m_timer;
 
 };
 

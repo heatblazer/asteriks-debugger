@@ -145,12 +145,13 @@ Gui::Gui(QWidget *parent)
             m_widget[2].layout2.addWidget(&m_widget[2].tones[i]);
             // connect to players
          }
+#if 0
         for(int i=0; i < SipApp::g_players.count(); i++) {
             Player* p = SipApp::g_players.at(i);
             connect(&m_widget[2].tones[i], SIGNAL(clicked(bool)),
-                    p, SLOT(playToConf()));
+                    this, SLOT(playToConf()));
         }
-
+#endif
 
         m_widget[2].layout.addLayout(&m_widget[2].layout2);
 

@@ -54,8 +54,8 @@ pj_status_t Recorder::entryPoint(void *user_data)
     }
 }
 
-Recorder::Recorder(const QString& fname, QObject *parent)
-    : MediaPort(parent),
+Recorder::Recorder(const QString& fname)
+    : MediaPort(),
       p_sndPort(nullptr),
       m_slot(0),
       m_isRecording(false),

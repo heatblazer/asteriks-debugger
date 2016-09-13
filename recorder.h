@@ -19,7 +19,7 @@ namespace izdebug {
 // also debug the data
 class Recorder : public MediaPort
 {
-    Q_OBJECT
+
 public:
     // pjsuatrhead api
     static pj_status_t my_get_frame(pjmedia_port* port, pjmedia_frame* frame);
@@ -27,7 +27,7 @@ public:
 
     static pj_status_t entryPoint(void* user_data);
 
-    explicit Recorder(const QString& fname, QObject* parent=nullptr);
+    explicit Recorder(const QString& fname);
     virtual ~Recorder();
     bool create();
     bool isRecording();
@@ -63,9 +63,6 @@ private:
 
     Mutex*  p_mutex;
     Thread* p_thread;
-
-
-
 };
 
 
