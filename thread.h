@@ -17,6 +17,16 @@ private:
     static volatile int m_lock;
 };
 
+
+class Mutex
+{
+public:
+    virtual ~Mutex() = 0;
+    virtual void lock() = 0;
+    virtual bool tryLock() = 0;
+    virtual void unlock() = 0;
+};
+
 class Thread
 {
 

@@ -167,6 +167,7 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.progressBar[0].setMinimumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximumSize(50, 300);
         m_vuMeter.progressBar[0].setMaximum(65535);
+
         m_vuMeter.progressBar[0].setTextVisible(true);
         m_vuMeter.progressBar[1].setTextVisible(true);
 

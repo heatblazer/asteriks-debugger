@@ -14,8 +14,6 @@
 
 #include <string.h>
 
-#include <QMutex>
-
 namespace izdebug {
 
 // statics
@@ -59,23 +57,17 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
     pjsua_call_info info;
     pjsua_call_get_info(call_id, &info);
 
-// refractor to the back logic where player and recorder are in
-// the same class in GUI
-
     if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
+
         pjsua_conf_connect(info.conf_slot, 0);
         pjsua_conf_connect(0, info.conf_slot);
-        // this will happen automatically on call
-        // if the recorder has been created
-
-        g_recorder->setSink(info.conf_slot);
 
         for(int i=0; i < g_players.count(); i++) {
-            g_players.at(i)->setSink(info.conf_slot);
+            g_players.at(i)->setSrc(info.conf_slot);
         }
 
+        g_recorder->setSrc(info.conf_slot);
         g_recorder->start();
-
 
      }
 }
@@ -114,7 +106,7 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
             conf_info.rx_level_adj, conf_info.tx_level_adj,
             conf_info.samples_per_frame, conf_info.bits_per_sample);
 
-    //Console::Instance().putData(QByteArray(con));
+    Console::Instance().putData(QByteArray(con));
 
     // play PCMU to the port
 }
@@ -219,7 +211,7 @@ bool SipApp::create(const QString &uri)
         }
 
         g_recorder->create();
-        g_recorder->start();
+
     }
 
     return m_isCreated;
@@ -255,6 +247,7 @@ void SipApp::hupCall()
     for(int i=0; i < g_players.count(); i++) {
         g_players.at(i)->stop();
     }
+    g_recorder->stop();
 }
 
 

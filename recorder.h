@@ -33,15 +33,23 @@ public:
     bool isRecording();
     pjmedia_port* pjPort();
 
+    // convinience
+    struct {
+        pjmedia_port* port;
+        unsigned slot;
+    } m_player; // no snd device attached
+
 signals:
     void sendFrame(pjmedia_frame* frm);
     void recording(bool);
     void sendRxTx(unsigned tx, unsigned rx);
 
-//public slots:
+
 public:
     void stop();
     void start();
+
+    void connectPlayer(unsigned src);
 
 public slots:
     void hTimeout3(void);
@@ -50,6 +58,7 @@ private:
 
     bool _create(const char* fname);
     bool _create2();
+    bool _create_player();
 
 
 private:
@@ -60,7 +69,11 @@ private:
     int m_samples;
     pj_int16_t* p_smp_data;
 
+    Mutex*  p_mutex;
     Thread* p_thread;
+
+
+
 };
 
 

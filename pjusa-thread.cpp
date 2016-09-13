@@ -4,10 +4,39 @@
 
 #include <iostream>
 
+#include <pjlib.h>
 // memory //
 #include "mem-pool.h"
 
 namespace izdebug {
+
+PjMutex::~PjMutex()
+{
+    pj_mutex_destroy(m_mutex);
+}
+
+PjMutex::PjMutex()
+{
+    pj_mutex_create(Pool::Instance().toPjPool(), NULL, PJ_MUTEX_DEFAULT, &m_mutex);
+}
+
+void PjMutex::lock()
+{
+    pj_mutex_lock(m_mutex);
+}
+
+void PjMutex::unlock()
+{
+    pj_mutex_unlock(m_mutex);
+}
+
+bool PjMutex::tryLock()
+{
+    if (pj_mutex_trylock(m_mutex) != PJ_SUCCESS) {
+        return false;
+    }
+    return true;
+}
 
 /// thread proxy function
 /// \brief PjThread::thEntryPoint

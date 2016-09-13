@@ -1,6 +1,7 @@
 #include "mediaport.h"
 
 #include <pjsua.h>
+#include <pjsua-lib/pjsua_internal.h>
 
 namespace izdebug {
 
@@ -33,7 +34,7 @@ unsigned MediaPort::getSlot()
 
 }
 
-unsigned MediaPort::getSink()
+unsigned MediaPort::getSrc()
 {
     return m_sink;
 }
@@ -45,14 +46,14 @@ pjmedia_port *MediaPort::toPj()
 
 bool MediaPort::connect(pjsua_conf_port_id src, pjsua_conf_port_id dst)
 {
-    pj_status_t s = pjsua_conf_connect(src, dst);
+    pj_status_t s = pjmedia_conf_connect_port(pjsua_var.mconf, src, dst, 0);
     if (s != PJ_SUCCESS) {
         return false;
     }
     return true;
 }
 
-void MediaPort::setSink(unsigned sink)
+void MediaPort::setSrc(unsigned sink)
 {
     m_sink = sink;
 }

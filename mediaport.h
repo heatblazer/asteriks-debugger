@@ -19,8 +19,8 @@ public:
     virtual bool isAdded();
     virtual void setSlot(unsigned slot);
     virtual unsigned getSlot();
-    virtual void setSink(unsigned sink);
-    virtual unsigned getSink();
+    virtual void setSrc(unsigned sink);
+    virtual unsigned getSrc();
     virtual pjmedia_port* toPj();
     virtual bool connect(pjsua_conf_port_id src, pjsua_conf_port_id dst);
 

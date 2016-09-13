@@ -59,6 +59,8 @@ bool Player::create()
         }
 
         {
+            pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
+                                  p_port, NULL, &m_slot);
 
             //pjmedia_snd_port_connect(p_sndPort, p_port);
         }
@@ -78,9 +80,6 @@ void Player::play()
 {
     if(!m_isPlaying) {
         // pjmedia
-         //pjmedia_snd_port_connect(p_sndPort, p_port);
-         pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
-                               p_port, NULL, &m_slot);
          pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
 
         m_isPlaying = true;
@@ -95,7 +94,8 @@ void Player::stop()
     if(m_isPlaying) {
 
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
-                                     getSlot(), getSink());
+                                     getSlot(),
+                                     getSrc());
         m_isPlaying = false;
         m_timer.stop();
     }

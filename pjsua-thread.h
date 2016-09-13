@@ -5,6 +5,20 @@
 
 namespace izdebug {
 
+class PjMutex : public Mutex
+{
+public:
+    PjMutex();
+    ~PjMutex();
+    void lock();
+    bool tryLock();
+    void unlock();
+private:
+
+    pj_mutex_t* m_mutex;
+
+};
+
 class PjThread : public Thread
 {
 public:

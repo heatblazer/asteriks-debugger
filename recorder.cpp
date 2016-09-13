@@ -108,8 +108,8 @@ bool Recorder::_create(const char *fname)
                                        PJMEDIA_PIA_BITS(&conf->info),
                                        0, 0,
                                        &p_port);
-        pjmedia_snd_port_create_rec(Pool::Instance().toPjPool(),
-                                    -1,
+        pjmedia_snd_port_create(Pool::Instance().toPjPool(),
+                                    -1, -1,
                                     PJMEDIA_PIA_SRATE(&conf->info),
                                     PJMEDIA_PIA_CCNT(&conf->info),
                                     PJMEDIA_PIA_SPF(&conf->info),
@@ -117,10 +117,7 @@ bool Recorder::_create(const char *fname)
                                     0,
                                     &p_sndPort);
 
-
          {
-
-
 
             if (status != PJ_SUCCESS) {
                 pjmedia_port_destroy(p_port);
@@ -135,10 +132,11 @@ bool Recorder::_create(const char *fname)
                               p_port, NULL, &m_slot);
 
         m_isOk = true;
-        return true;
+        m_isOk &= _create_player();
+
     }
 
-    return false;
+    return m_isOk;
 }
 
 bool Recorder::_create2()
@@ -184,6 +182,33 @@ bool Recorder::_create2()
 
 }
 
+bool Recorder::_create_player()
+{
+    pj_status_t s = pjmedia_null_port_create(Pool::Instance().toPjPool(),
+                                             PJMEDIA_PIA_SRATE(&p_port->info),
+                                             PJMEDIA_PIA_CCNT(&p_port->info),
+                                             PJMEDIA_PIA_SPF(&p_port->info),
+                                             PJMEDIA_PIA_BITS(&p_port->info),
+                                             &m_player.port);
+
+
+    if (s != PJ_SUCCESS) {
+        return false;
+    }
+
+    s = pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
+                              m_player.port, NULL, &m_player.slot);
+
+    if (s != PJ_SUCCESS) {
+        return false;
+    }
+
+    return true;
+
+
+}
+
+
 
 pjmedia_port *Recorder::pjPort()
 {
@@ -195,12 +220,17 @@ void Recorder::stop()
     if (m_isRecording) {
         //_disconnect_and_remove();
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
-                                     getSlot(),
-                                     getSink());
-        p_thread->join();
+                                     getSrc(),
+                                     getSlot());
+
+        delete p_thread;
+
         m_isRecording = false;
 
     }
+    Gui::Instance().m_vuMeter.progressBar[0].setValue(0);
+    Gui::Instance().m_vuMeter.progressBar[1].setValue(0);
+
     emit recording(false);
 }
 
@@ -209,19 +239,20 @@ void Recorder::start()
     // start to record
     if (!m_isRecording) {
         m_isRecording = true;
+        p_mutex = new PjMutex();
         p_thread = new PjThread(this);
 
-        pjsua_conf_connect(getSink(),
-                           getSlot());
-
+        pjmedia_conf_connect_port(pjsua_var.mconf,
+                                  m_sink,
+                                  m_slot, 0);
         ((PjThread*)p_thread)->p_entry = &Recorder::entryPoint;
         p_thread->create(PJTHR_STACK_SIZE, 0, PjThread::thEntryPoint,
                          this);
 
-
     }
     emit recording(true);
 }
+
 
 /// deprecated name
 /// \brief Recorder::hTimeout3
@@ -230,7 +261,7 @@ void Recorder::hTimeout3()
 {
     if (m_isRecording) {
 
-        pjmedia_frame frm;
+        pjmedia_frame frm, frm2;
         unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
 
         frm.buf = Pool::Instance().zero_alloc(spf);
@@ -239,16 +270,19 @@ void Recorder::hTimeout3()
 
 
         pj_status_t s = pjmedia_port_put_frame(p_port, &frm);
+
         if (s != PJ_SUCCESS) {
             return;
         }
 
+
         // analyze highest value of the current frame
+
         if(frm.buf) {
             memcpy(smpls, (pj_int16_t*)frm.buf, spf);
             for(int i=0; i < spf; i++) {
                 pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
-                if (hwm < abs_val ) {
+                if (hwm <= abs_val ) {
                     hwm = abs_val;
                 }
             }
@@ -257,15 +291,19 @@ void Recorder::hTimeout3()
         pj_int16_t* framebuf = new pj_int16_t[m_samples];
         pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
                                              PJMEDIA_PIA_SPF(&p_port->info));
+
         int level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
 
         unsigned tx, rx;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
 
-        pj_thread_sleep(100);
+        pj_thread_sleep(40);
 
+        static QMutex m;
+        m.lock();
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(rx);
+        m.unlock();
     }
 }
 
