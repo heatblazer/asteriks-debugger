@@ -53,23 +53,24 @@ int PjThread::thEntryPoint(int argc, void *argv)
     ((PjThread*)p)->m_isRunning = true;
 }
 
+PjThread::~PjThread()
+{
+}
+
 PjThread::PjThread(MediaPort *mp)
-    :p_thr(NULL),
-    m_isRunning(false),
-    usr_data(NULL)
+    :   p_thr(NULL),
+        m_isRunning(false),
+        usr_data(NULL)
 {
     m_port = mp;
 }
 
 
-
-PjThread::~PjThread()
-{
-}
-
-
 bool PjThread::create(int stack_size, int prio, thCb epoint, void *udata)
 {
+
+    pj_thread_t* current = pj_thread_this();
+
     pj_status_t status = pj_thread_create(Pool::Instance().toPjPool(),
                                           NULL, p_entry, this,
                                           (pj_ssize_t)stack_size,
@@ -77,7 +78,12 @@ bool PjThread::create(int stack_size, int prio, thCb epoint, void *udata)
     if (status != PJ_SUCCESS) {
         return false;
     }
-    // set priorties latter
+
+    if (prio >= pj_thread_get_prio(current)) {
+        prio--;
+    }
+
+    pj_thread_set_prio(p_thr, prio);
 
     return true;
 }
@@ -90,10 +96,25 @@ void PjThread::join()
     }
 }
 
+void PjThread::resume()
+{
+    pj_thread_resume(p_thr);
+}
+
+void PjThread::sleep(unsigned ms)
+{
+    pj_thread_sleep(ms);
+}
+
 void *PjThread::getCurrentThread()
 {
     pj_thread_t* self = pj_thread_this();
     return (pj_thread_t*)self;
+}
+
+MediaPort *PjThread::getPort()
+{
+    return m_port;
 }
 
 

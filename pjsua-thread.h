@@ -27,18 +27,23 @@ public:
     static int thEntryPoint(int argc, void *argv);
 
 public:
-
-    PjThread(MediaPort* mp);
+    explicit PjThread(MediaPort* mp);
     ~PjThread();
     bool create(int stack_size, int prio, thCb epoint, void *udata);
     void join();
+    void resume();
+    void sleep(unsigned ms);
     void* getCurrentThread();
+    MediaPort* getPort();
+
 
 private:
 
     pj_thread_t* p_thr;
     bool m_isRunning;
+    MediaPort* m_port; // aggregation
     void* usr_data;
+
 };
 
 } // namespace izdebug

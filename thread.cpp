@@ -4,16 +4,6 @@
 
 namespace izdebug {
 
-Thread::~Thread()
-{
-
-}
-
-
-MediaPort *Thread::getPort()
-{
-    return m_port;
-}
 
 Mutex::~Mutex()
 {

@@ -14,7 +14,7 @@ Player::Player(const char* fname)
       p_sndPort(nullptr),
       m_isPlaying(false)
 {
-    snprintf(m_fname, 256, "%s", fname);
+    strcpy(m_fname, fname);
 }
 
 Player::~Player()

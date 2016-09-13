@@ -114,6 +114,11 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 }
 
 
+/// the standalone sip application
+/// minaml need for initing a sip call
+/// record it, and analyzing a port`s frame
+/// \brief SipApp::SipApp
+///
 SipApp::SipApp()
     : m_current_slot(-1),
       m_isCreated(false)
