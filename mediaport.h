@@ -1,9 +1,6 @@
 #ifndef MEDIAPORT_H
 #define MEDIAPORT_H
 
-// qt //
-#include <QObject>
-
 // pjmedia //
 #include <pjmedia.h>
 #include <pjsua.h>
@@ -12,7 +9,7 @@ namespace izdebug {
 
 class ConfBridge;
 
-class MediaPort : public QObject
+class MediaPort
 {
 public:
     virtual bool create()=0;
@@ -25,7 +22,7 @@ public:
     virtual bool connect(pjsua_conf_port_id src, pjsua_conf_port_id dst);
 
 protected:
-    explicit MediaPort(QObject* parent=nullptr);
+    explicit MediaPort();
     virtual ~MediaPort()=0;
 
 

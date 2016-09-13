@@ -6,9 +6,8 @@
 namespace izdebug {
 
 
-MediaPort::MediaPort(QObject *parent)
-    : QObject(parent),
-      p_port(nullptr),
+MediaPort::MediaPort()
+    : p_port(nullptr),
       m_slot(0),
       m_sink(0),
       m_isOk(false)
