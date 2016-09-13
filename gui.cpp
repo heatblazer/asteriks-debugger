@@ -217,7 +217,7 @@ Gui::Gui(QWidget *parent)
         connect(&m_widget[0].button1, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked1()));
         connect(this, SIGNAL(sendUri(const char*)),
-                p_sipApp, SLOT(makeACall(const char*)));
+                this, SLOT(makeACall(const char*)));
 
         // start and stop transimission
      }
@@ -271,7 +271,7 @@ void Gui::hClicked1()
 void Gui::hClicked2()
 {
     m_widget[0].button1.setDisabled(false);
-    p_sipApp->hupCall();
+    p_sipApp->hupAllCalls();
 
     m_vuMeter.progressBar[0].setValue(0);
     m_vuMeter.progressBar[1].setValue(0);
@@ -354,6 +354,11 @@ void Gui::hOnCallMediaState()
 {
 
 
+}
+
+void Gui::makeACall(const char *str)
+{
+    p_sipApp->makeACall(str);
 }
 
 

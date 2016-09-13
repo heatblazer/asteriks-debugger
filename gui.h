@@ -79,6 +79,7 @@ private slots:
     void updateVuMeterRx();
     void updateVuTxRx(unsigned tx, unsigned rx);
     void hOnCallMediaState();
+    void makeACall(const char* str);
 
 
 private:
