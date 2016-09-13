@@ -69,7 +69,8 @@ Gui*    Gui::s_instance=nullptr;
 Gui::Gui(QWidget *parent)
     : QWidget(parent),
       p_console(nullptr),
-      p_sipApp(nullptr)
+      p_sipApp(nullptr),
+      p_alsadbg(nullptr)
 
 {
     // first init the sip application
@@ -190,7 +191,7 @@ Gui::Gui(QWidget *parent)
         m_aux_menu.button.setMaximumSize(90, 90);
         m_aux_menu.layout.addWidget(&m_aux_menu.button, 0, Qt::AlignRight);
         connect(&m_aux_menu.button, SIGNAL(clicked(bool)),
-                QApplication::instance(), SLOT(quit()));
+                this, SLOT(appQuit()));
     }
 
 
@@ -241,18 +242,15 @@ Gui::Gui(QWidget *parent)
 
     }
 
+    p_alsadbg = new ALSADebugger;
+    p_alsadbg->create();
+
 }
 
 Gui::~Gui()
 {
 
-    if (p_console != nullptr) {
-        p_console = nullptr;
-    }
-    if(p_sipApp != nullptr) {
-        delete p_sipApp;
-        p_sipApp = nullptr;
-    }
+
 }
 
 
@@ -366,9 +364,23 @@ void Gui::makeACall(const char *str)
     p_sipApp->makeACall(str);
 }
 
+/// cleaner destruction of objects
+/// \brief Gui::appQuit
+///
 void Gui::appQuit()
 {
-    this->destroy();
+    if (p_console != nullptr) {
+        p_console = nullptr;
+    }
+    if(p_sipApp != nullptr) {
+        delete p_sipApp;
+        p_sipApp = nullptr;
+    }
+    if (p_alsadbg) {
+        delete p_alsadbg;
+    }
+
+    QApplication::instance()->quit();
 }
 
 

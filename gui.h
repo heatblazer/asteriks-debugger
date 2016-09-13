@@ -19,6 +19,9 @@
 
 #include "defs.h"
 
+// test alsa-debugger compile //
+#include "alsa-debugger.h" // deleteme later
+
 namespace izdebug {
 
 class Gui;
@@ -138,6 +141,7 @@ private:
     QFileDialog m_fileBrowser;
     SipApp*     p_sipApp;
     static Gui* s_instance;
+    ALSADebugger* p_alsadbg;
 
     friend class SipApp;
     friend class Recorder;
