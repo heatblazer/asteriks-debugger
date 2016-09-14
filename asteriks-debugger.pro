@@ -10,7 +10,7 @@ QT       += core gui xml network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = asteriks-debugger
+TARGET = sip-analyzer
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -std=c++11 -Wextra -pedantic -Wmissing-braces \
@@ -159,4 +159,8 @@ HEADERS  += \
     Sip/sipapp.h \
     Gui/gui.h
 
-FORMS    +=
+target.path = $$OUT_PWD
+target.files = $$PWD/assets/
+
+INSTALLS += target
+
