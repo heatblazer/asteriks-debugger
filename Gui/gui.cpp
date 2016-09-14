@@ -13,8 +13,6 @@
 #include "Sip/recorder.h"
 #include "Sip/player.h"
 
-#include "vu-meter.h"
-
 // pjlib //
 #include <pjlib-util/cli.h>
 #include <pjlib-util/cli_imp.h>
@@ -77,6 +75,7 @@ Gui::Gui(QWidget *parent)
 {
     // first init the sip application
     // conf, account, register ports, etc.
+    // the gui must register a number for the client to use
     {
         p_sipApp = &SipApp::Instance();
         if(p_sipApp->create("sip:6016@192.168.32.89")) {
@@ -95,6 +94,19 @@ Gui::Gui(QWidget *parent)
 
     setMinimumSize(QSize(1024 , 480));
     setMaximumSize(QSize(1024, 480));
+
+    // TODO
+    // register a sip account to the dial plan, then
+    // enable all widgets
+    {
+        m_sip_reg_widget.label.setText("Register SIP account:");
+        m_sip_reg_widget.text.setMaximumSize(200, 20);
+        m_sip_reg_widget.text.setMinimumSize(200, 20);
+        m_sip_reg_widget.layout.addWidget(&m_sip_reg_widget.label);
+        m_sip_reg_widget.layout.addWidget(&m_sip_reg_widget.text);
+
+    }
+
     // setup widget for dialing
     {
         m_call_widget.text.setMinimumSize(200, 25);
@@ -155,9 +167,9 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
-        m_vuMeter.label[0].setText("coef. X 4369");
-        m_vuMeter.progressBar[0].setMinimumSize(50, 300);
-        m_vuMeter.progressBar[0].setMaximumSize(50, 300);
+        m_vuMeter.label[0].setText("(TX)");
+        m_vuMeter.progressBar[0].setMinimumSize(25, 300);
+        m_vuMeter.progressBar[0].setMaximumSize(25, 300);
         m_vuMeter.progressBar[0].setMaximum(65535);
 
         m_vuMeter.progressBar[0].setTextVisible(true);
@@ -173,19 +185,30 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.ly[3].addWidget(m_vuMeter.rulerrx);
 
 
-        m_vuMeter.label[1].setText("VU METER (RX)");
-        m_vuMeter.progressBar[1].setMinimumSize(50, 300);
-        m_vuMeter.progressBar[1].setMaximumSize(50, 300);
+        m_vuMeter.label[1].setText("(RX)");
+        m_vuMeter.progressBar[1].setMinimumSize(25, 300);
+        m_vuMeter.progressBar[1].setMaximumSize(25, 300);
         m_vuMeter.progressBar[1].setMaximum(300);
 
         m_vuMeter.progressBar[1].setOrientation(Qt::Vertical);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.label[1]);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.progressBar[1]);
 
+        m_vuMeter.label[2].setText("Coef. x4969");
+        m_vuMeter.progressBar[2].setMinimumSize(25, 300);
+        m_vuMeter.progressBar[2].setMaximumSize(25, 300);
+        m_vuMeter.progressBar[2].setMaximum(300);
+
+        m_vuMeter.progressBar[2].setOrientation(Qt::Vertical);
+        m_vuMeter.ly[5].addWidget(&m_vuMeter.label[2]);
+        m_vuMeter.ly[5].addWidget(&m_vuMeter.progressBar[2]);
+
+
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[0], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[2], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[1], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[3], Qt::AlignBottom);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[5], Qt::AlignBottom);
 
     }
 
@@ -202,6 +225,7 @@ Gui::Gui(QWidget *parent)
 
 
 
+    m_rvbox.addLayout(&m_sip_reg_widget.layout);
     m_rvbox.addLayout(&m_call_widget.layout);
     //m_rvbox.addLayout(&m_widget[1].layout);
     m_rvbox.addLayout(&m_tones_widget.layout);
@@ -249,16 +273,15 @@ Gui::Gui(QWidget *parent)
     }
 
     p_alsadbg = new ALSADebugger;
+    // dummy alsa for test
     p_alsadbg->create(false, false);
 
 }
 
 Gui::~Gui()
 {
-
-
+    // see the claenup
 }
-
 
 void Gui::hTextChange()
 {

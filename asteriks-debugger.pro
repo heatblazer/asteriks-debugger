@@ -157,7 +157,6 @@ HEADERS  += \
     Sip/player.h \
     Sip/recorder.h \
     Sip/sipapp.h \
-    Gui/gui.h \
-    Gui/vu-meter.h
+    Gui/gui.h
 
 FORMS    +=

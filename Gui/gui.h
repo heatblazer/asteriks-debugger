@@ -106,6 +106,13 @@ private:
     QVBoxLayout m_midbox;
 
     struct {
+        QLabel label;
+        QTextEdit text;
+        QHBoxLayout layout;
+
+    } m_sip_reg_widget;
+
+    struct {
         QTextEdit   text;
         QPushButton button1;
         QPushButton button2;
@@ -124,11 +131,12 @@ private:
 
     // implement vu logic
     struct {
-        QLabel      label[2];
-        QProgressBar progressBar[2];
+        QLabel      label[3];
+        QProgressBar progressBar[3];
         QHBoxLayout layout;
-        QVBoxLayout ly[4];
+        QVBoxLayout ly[6];
         QSpacerItem* spacer;
+        Ruler*         peakmeter;
         Ruler*         rulertx;
         Ruler*         rulerrx;
 

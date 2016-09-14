@@ -230,6 +230,8 @@ void Recorder::stop()
     }
     Gui::Instance().m_vuMeter.progressBar[0].setValue(0);
     Gui::Instance().m_vuMeter.progressBar[1].setValue(0);
+    Gui::Instance().m_vuMeter.progressBar[2].setValue(0);
+
 }
 
 void Recorder::start()
@@ -287,16 +289,26 @@ void Recorder::doWork()
                                              PJMEDIA_PIA_SPF(&p_port->info));
 
         int level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
+        (void) level;
+
+
 
         unsigned tx, rx;
+        pjmedia_conf2* hijack = reinterpret_cast<pjmedia_conf2*>(pjsua_var.mconf);
+        pjmedia_port* call_port = hijack->ports[getSrc()]->port;
+
+        pjmedia_port_get_frame(call_port, &frm2);
+
+        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
 
         pj_thread_sleep(40);
-
+        // coming too fast from gui thread, we may corrupt the paint()
         static QMutex m;
         m.lock();
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(rx);
+        Gui::Instance().m_vuMeter.progressBar[2].setValue(tx);
         m.unlock();
     }
 }
