@@ -78,6 +78,7 @@ void Player::doWork(void *data)
 
 void Player::play()
 {
+    std::cout << "Playing file" << std::endl;
     if(!m_isPlaying) {
         // pjmedia
          pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
@@ -87,7 +88,7 @@ void Player::play()
 
 void Player::stop()
 {
-
+    std::cout << "Stopping file" << std::endl;
     if(m_isPlaying) {
         pjmedia_conf_disconnect_port(pjsua_var.mconf,
                                      getSlot(),

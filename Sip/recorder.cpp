@@ -301,7 +301,7 @@ void Recorder::doWork()
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);
 
-        pj_thread_sleep(40);
+        pj_thread_sleep(50);
 
         // coming too fast from gui thread, we may corrupt the paint()
         static QMutex m;
