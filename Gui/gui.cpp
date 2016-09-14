@@ -167,7 +167,7 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
-        m_vuMeter.label[0].setText("(TX)");
+        m_vuMeter.label[0].setText("Coef. X4969");
         m_vuMeter.progressBar[0].setMinimumSize(25, 300);
         m_vuMeter.progressBar[0].setMaximumSize(25, 300);
         m_vuMeter.progressBar[0].setMaximum(65535);
@@ -179,11 +179,10 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.ly[0].addWidget(&m_vuMeter.label[0]);
         m_vuMeter.ly[0].addWidget(&m_vuMeter.progressBar[0]);
 
-        m_vuMeter.rulertx = new Ruler(this);
-        m_vuMeter.ly[2].addWidget(m_vuMeter.rulertx);
+        //m_vuMeter.rulertx = new Ruler(this);
+        //m_vuMeter.ly[2].addWidget(m_vuMeter.rulertx);
         m_vuMeter.rulerrx = new Ruler(this);
         m_vuMeter.ly[3].addWidget(m_vuMeter.rulerrx);
-
 
         m_vuMeter.label[1].setText("(RX)");
         m_vuMeter.progressBar[1].setMinimumSize(25, 300);
@@ -194,7 +193,7 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.ly[1].addWidget(&m_vuMeter.label[1]);
         m_vuMeter.ly[1].addWidget(&m_vuMeter.progressBar[1]);
 
-        m_vuMeter.label[2].setText("Coef. x4969");
+        m_vuMeter.label[2].setText("(TX)");
         m_vuMeter.progressBar[2].setMinimumSize(25, 300);
         m_vuMeter.progressBar[2].setMaximumSize(25, 300);
         m_vuMeter.progressBar[2].setMaximum(300);
@@ -303,6 +302,8 @@ void Gui::hClicked2()
 
     m_vuMeter.progressBar[0].setValue(0);
     m_vuMeter.progressBar[1].setValue(0);
+    m_vuMeter.progressBar[2].setValue(0);
+
 }
 
 void Gui::hClicked3()
@@ -414,6 +415,8 @@ void Gui::appQuit()
         p_console = nullptr;
     }
     if(p_sipApp != nullptr) {
+        // stop calls
+        p_sipApp->hupAllCalls();
         delete p_sipApp;
         p_sipApp = nullptr;
     }
