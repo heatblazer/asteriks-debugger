@@ -14,10 +14,10 @@
 #include <iostream>
 
 // console //
-#include "gui.h"
+#include "Gui/gui.h"
 
 // mutex //
-#include "pjsua-thread.h"
+#include "Concurent/pjsua-thread.h"
 #include <pjlib.h>
 #include <QMutex>
 

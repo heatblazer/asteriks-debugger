@@ -11,7 +11,7 @@
 #include "defs.h"
 
 // gui//
-#include "gui.h"
+#include "Gui/gui.h"
 
 #include "player.h"
 #include "recorder.h"

@@ -10,7 +10,7 @@
 #include "recorder.h"
 
 // console //
-#include "gui.h"
+#include "Gui/gui.h"
 
 #include <string.h>
 

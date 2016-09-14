@@ -7,7 +7,7 @@
 #include <pjmedia.h>
 
 namespace izdebug {
-
+#if 0
 class VuMeter : public QObject
 {
     // it`s emitter
@@ -26,7 +26,7 @@ private:
 
 };
 
-
+#endif
 } // namespace izdebug
 
 #endif // VUMETER_H

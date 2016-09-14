@@ -39,27 +39,21 @@ LIBS += -lpjsua2-x86_64-unknown-linux-gnu \
     -lasound
 
 SOURCES += main.cpp \
-    gui.cpp \
-    mem-pool.cpp \
-    sipapp.cpp \
-    recorder.cpp \
-    confbridge.cpp \
-    mediaport.cpp \
-    player.cpp \
-    alsa-debugger.cpp \
     Utils/ring-buffer.cpp \
     Concurent/pjusa-thread.cpp \
-    Concurent/thread.cpp
+    Concurent/thread.cpp \
+    Alsa/alsa-debugger.cpp \
+    Sip/call.cpp \
+    Sip/confbridge.cpp \
+    Sip/mediaport.cpp \
+    Sip/mem-pool.cpp \
+    Sip/player.cpp \
+    Sip/recorder.cpp \
+    Sip/sipapp.cpp \
+    Gui/gui.cpp
 
 HEADERS  += \
-    gui.h \
-    mem-pool.h \
-    sipapp.h \
     defs.h \
-    recorder.h \
-    confbridge.h \
-    mediaport.h \
-    player.h \
     External/kfr/base/abs.hpp \
     External/kfr/base/asin_acos.hpp \
     External/kfr/base/atan.hpp \
@@ -152,9 +146,18 @@ HEADERS  += \
     External/kfr/io.hpp \
     External/kfr/math.hpp \
     External/kfr/version.hpp \
-    alsa-debugger.h \
     Utils/ring-buffer.h \
     Concurent/pjsua-thread.h \
-    Concurent/thread.h
+    Concurent/thread.h \
+    Alsa/alsa-debugger.h \
+    Sip/call.h \
+    Sip/confbridge.h \
+    Sip/mediaport.h \
+    Sip/mem-pool.h \
+    Sip/player.h \
+    Sip/recorder.h \
+    Sip/sipapp.h \
+    Gui/gui.h \
+    Gui/vu-meter.h
 
 FORMS    +=

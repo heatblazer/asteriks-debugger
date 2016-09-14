@@ -20,7 +20,7 @@
 #include "defs.h"
 
 // test alsa-debugger compile //
-#include "alsa-debugger.h" // deleteme later
+#include "Alsa/alsa-debugger.h" // deleteme later
 
 namespace izdebug {
 
@@ -78,6 +78,8 @@ private slots:
     void hClicked2();
     void hClicked3();
 
+    void echoTest();
+
     void hClear();
     void hLoadWav();
     void playFile();
@@ -109,6 +111,7 @@ private:
         QPushButton button2;
         QPushButton button3; // echo call to self
         QVBoxLayout layout;
+        uint8_t toggle_rec;
     } m_call_widget;
 
     struct {

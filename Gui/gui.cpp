@@ -6,12 +6,14 @@
 #include <QApplication>
 
 // sip app //
-#include "sipapp.h"
-#include "mem-pool.h"
+#include "Sip/sipapp.h"
+#include "Sip/mem-pool.h"
 
 // custom stuff //
-#include "recorder.h"
-#include "player.h"
+#include "Sip/recorder.h"
+#include "Sip/player.h"
+
+#include "vu-meter.h"
 
 // pjlib //
 #include <pjlib-util/cli.h>
@@ -114,6 +116,10 @@ Gui::Gui(QWidget *parent)
         m_call_widget.layout.addWidget(&m_call_widget.button1, 0, Qt::AlignRight);
         m_call_widget.layout.addWidget(&m_call_widget.button2, 0, Qt::AlignRight);
         m_call_widget.layout.addWidget(&m_call_widget.button3, 0, Qt::AlignRight);
+
+        connect(&m_call_widget.button3, SIGNAL(clicked(bool)),
+                this, SLOT(echoTest()));
+        m_call_widget.toggle_rec &= 0;
 
     }
 
@@ -243,7 +249,7 @@ Gui::Gui(QWidget *parent)
     }
 
     p_alsadbg = new ALSADebugger;
-    p_alsadbg->create();
+    p_alsadbg->create(false, false);
 
 }
 
@@ -278,6 +284,18 @@ void Gui::hClicked2()
 
 void Gui::hClicked3()
 {
+
+}
+
+void Gui::echoTest()
+{
+    m_call_widget.toggle_rec ^= (1 << 0);
+
+    if (m_call_widget.toggle_rec & 1) {
+        p_sipApp->g_recorder->start();
+    } else {
+        p_sipApp->g_recorder->stop();
+    }
 
 }
 
