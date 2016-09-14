@@ -21,6 +21,17 @@
 #include <pjlib.h>
 #include <QMutex>
 
+
+static void my_put_frame(pjmedia_port* p, pjmedia_frame* frm)
+{
+    pjmedia_conf2* cnf = (pjmedia_conf2*) p->port_data.pdata;
+    struct conf_port* port = cnf->ports[p->port_data.ldata];
+
+    if (port->listener_cnt==0) {
+        return;
+    }
+}
+
 namespace izdebug {
 
 pj_status_t Recorder::my_get_frame(pjmedia_port *port, pjmedia_frame *frame)
@@ -252,64 +263,56 @@ void Recorder::start()
     }
 }
 
-
+/// do specifik work here
+/// hijakced conf bridge must be analyzed properly
+/// \brief Recorder::doWork
+///
 void Recorder::doWork()
 {
     if (m_isRecording) {
 
+       unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
         pjmedia_frame frm, frm2;
-        unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
-
         frm.buf = Pool::Instance().zero_alloc(spf);
         pj_int16_t* smpls = new pj_int16_t[spf];
         pj_int16_t hwm=0;
 
+        pjmedia_conf2* hijack = reinterpret_cast<pjmedia_conf2*>(pjsua_var.mconf);
+        conf_port* call_port = hijack->ports[getSrc()];
 
-        pj_status_t s = pjmedia_port_put_frame(p_port, &frm);
+        // TODO read why doubling the buffer for frame... 160 << 1???
+        frm2.buf = Pool::Instance().alloc(PJMEDIA_PIA_SPF(&call_port->port->info) << 1);
+        frm2.size = (PJMEDIA_PIA_SPF(&call_port->port->info)) << 1;
+        pjmedia_port_get_frame(call_port->port, &frm2);
 
-        if (s != PJ_SUCCESS) {
-            return;
-        }
+        memcpy(smpls,
+               (pj_int16_t*)frm2.buf,
+               spf);
 
-
-        // analyze highest value of the current frame
-
-        if(frm.buf) {
-            memcpy(smpls, (pj_int16_t*)frm.buf, spf);
-            for(int i=0; i < spf; i++) {
-                pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
-                if (hwm <= abs_val ) {
-                    hwm = abs_val;
-                }
+        for(int i=0; i < spf; i++) {
+            pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
+            if (hwm < abs_val ) {
+                hwm = abs_val;
             }
         }
 
-        pj_int16_t* framebuf = new pj_int16_t[m_samples];
-        pj_int32_t level32 = pjmedia_calc_avg_signal(framebuf,
-                                             PJMEDIA_PIA_SPF(&p_port->info));
 
-        int level = pjmedia_linear2ulaw(level32) ^ 0xFF; // toggle
-        (void) level;
-
-
-
-        unsigned tx, rx;
-        pjmedia_conf2* hijack = reinterpret_cast<pjmedia_conf2*>(pjsua_var.mconf);
-        pjmedia_port* call_port = hijack->ports[getSrc()]->port;
-
-        pjmedia_port_get_frame(call_port, &frm2);
-
+        unsigned tx, rx, tx2, rx2;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
-        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx, &rx);
+        pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);
 
         pj_thread_sleep(40);
+
         // coming too fast from gui thread, we may corrupt the paint()
         static QMutex m;
         m.lock();
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
-        Gui::Instance().m_vuMeter.progressBar[1].setValue(rx);
-        Gui::Instance().m_vuMeter.progressBar[2].setValue(tx);
+        Gui::Instance().m_vuMeter.progressBar[1].setValue(tx);
+        Gui::Instance().m_vuMeter.progressBar[2].setValue(tx2);
         m.unlock();
+        QThread::currentThread()->sleep(0);
+
+
     }
 }
 
