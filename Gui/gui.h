@@ -84,6 +84,12 @@ private slots:
     void hLoadWav();
     void playFile();
 
+    // play different files
+    void play1k10db();
+    void play1kminus6db();
+    void play1kminus12db();
+    void play1kminus24db();
+
     void updateVuMeterTx();
     void updateVuMeterRx();
     void updateVuTxRx(unsigned tx, unsigned rx);

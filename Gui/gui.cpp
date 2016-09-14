@@ -152,14 +152,18 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.layout.addLayout(&m_tones_widget.layout2);
     }
 
-#if 0
-        for(int i=0; i < SipApp::g_players.count(); i++) {
-            Player* p = SipApp::g_players.at(i);
-            connect(&m_tones_widget.tones[i], SIGNAL(clicked(bool)),
-                    this, SLOT(playToConf()));
-        }
-#endif
+    // connect file players
+    {
+        connect(&m_tones_widget.tones[0], SIGNAL(clicked(bool)),
+                this, SLOT(play1k10db()));
+        connect(&m_tones_widget.tones[1], SIGNAL(clicked(bool)),
+                this, SLOT(play1kminus6db()));
+        connect(&m_tones_widget.tones[2], SIGNAL(clicked(bool)),
+                this, SLOT(play1kminus12db()));
+        connect(&m_tones_widget.tones[3], SIGNAL(clicked(bool)),
+                this, SLOT(play1kminus24db()));
 
+    }
 
     // vu meter initialization
     {
@@ -206,8 +210,9 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[0], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[2], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[1], Qt::AlignBottom);
-        m_vuMeter.layout.addLayout(&m_vuMeter.ly[3], Qt::AlignBottom);
         m_vuMeter.layout.addLayout(&m_vuMeter.ly[5], Qt::AlignBottom);
+        m_vuMeter.layout.addLayout(&m_vuMeter.ly[3], Qt::AlignBottom);
+
 
     }
 
@@ -359,6 +364,26 @@ void Gui::playFile()
         const char* s = m_tones_widget.text.toPlainText().toLatin1().constData();
 
     }
+}
+
+void Gui::play1k10db()
+{
+    p_sipApp->g_players.at(0)->playToConf();
+}
+
+void Gui::play1kminus6db()
+{
+    p_sipApp->g_players.at(1)->playToConf();
+}
+
+void Gui::play1kminus12db()
+{
+    p_sipApp->g_players.at(2)->playToConf();
+}
+
+void Gui::play1kminus24db()
+{
+    p_sipApp->g_players.at(3)->playToConf();
 }
 
 
@@ -532,7 +557,7 @@ void Ruler::paintEvent(QPaintEvent *event)
     int step = 45;
     for(int i=0; i < 15; i++) {
         pnt.setPen(QColor(255, 0, 0));
-        pnt.drawRect(QRect(0, m_position.y()-step, 20, 20));
+        pnt.drawRect(QRect(0, m_position.y()-step, 0, 20));
         pnt.setPen(QColor(0,0,255));
         pnt.drawText(QRect(5, m_position.y()-step, 20, 20),
                      QString(QString::number(i)));
