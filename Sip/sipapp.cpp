@@ -114,6 +114,15 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 }
 
 
+pj_status_t SipApp::entry(void* udata)
+{
+
+    for(;;) {
+        printf("Thread for SIPAPP!\n");
+    }
+
+}
+
 /// the standalone sip application
 /// minaml need for initing a sip call
 /// record it, and analyzing a port`s frame
@@ -129,6 +138,7 @@ SipApp::SipApp()
     g_players.append(new Player("assets/1k-12db.wav"));
     g_players.append(new Player("assets/1k-24db.wav"));
     g_recorder = new Recorder("test_rec.wav");
+
 
 }
 
@@ -218,7 +228,11 @@ bool SipApp::create(const QString &uri)
         g_recorder->create();
 
     }
-
+#if 0
+    Thread* t = new PjThread(g_recorder);
+    ((PjThread*)t)->p_entry = &entry;
+    t->create(0, 0, PjThread::thEntryPoint, this);
+#endif
     return m_isCreated;
 
 }

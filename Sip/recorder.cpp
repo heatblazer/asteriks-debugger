@@ -143,7 +143,6 @@ bool Recorder::_create(const char *fname)
                               p_port, NULL, &m_slot);
 
         m_isOk = true;
-        m_isOk &= _create_player();
 
     }
 
@@ -256,6 +255,7 @@ void Recorder::start()
         pjmedia_conf_connect_port(pjsua_var.mconf,
                                   m_sink,
                                   m_slot, 0);
+
         ((PjThread*)p_thread)->p_entry = &Recorder::entryPoint;
         p_thread->create(PJTHR_STACK_SIZE, 0, PjThread::thEntryPoint,
                          this);
@@ -284,6 +284,7 @@ void Recorder::doWork()
         frm2.buf = Pool::Instance().alloc(PJMEDIA_PIA_SPF(&call_port->port->info) << 1);
         frm2.size = (PJMEDIA_PIA_SPF(&call_port->port->info)) << 1;
         pjmedia_port_get_frame(call_port->port, &frm2);
+//        pjmedia_port_put_frame(call_port->port, &frm2);
 
         memcpy(smpls,
                (pj_int16_t*)frm2.buf,

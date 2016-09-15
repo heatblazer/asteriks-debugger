@@ -23,7 +23,9 @@ class Recorder;
 
 class SipApp
 {
-
+public:
+    static int cb(int argc, void* argv);
+    static pj_status_t entry(void* udata);
 public:
     static QList<Player*> g_players;
     static Recorder*    g_recorder;

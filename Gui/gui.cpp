@@ -127,7 +127,7 @@ Gui::Gui(QWidget *parent)
         m_call_widget.layout.addWidget(&m_call_widget.text, 0, Qt::AlignRight);
         m_call_widget.layout.addWidget(&m_call_widget.button1, 0, Qt::AlignRight);
         m_call_widget.layout.addWidget(&m_call_widget.button2, 0, Qt::AlignRight);
-        m_call_widget.layout.addWidget(&m_call_widget.button3, 0, Qt::AlignRight);
+    //    m_call_widget.layout.addWidget(&m_call_widget.button3, 0, Qt::AlignRight);
 
         connect(&m_call_widget.button3, SIGNAL(clicked(bool)),
                 this, SLOT(echoTest()));
