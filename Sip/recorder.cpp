@@ -119,6 +119,16 @@ bool Recorder::_create(const char *fname)
                                        PJMEDIA_PIA_BITS(&conf->info),
                                        0, 0,
                                        &p_port);
+
+
+#if 0
+        pj_status_t status = pjmedia_null_port_create(Pool::Instance().toPjPool(),
+                                       PJMEDIA_PIA_SRATE(&conf->info),
+                                       PJMEDIA_PIA_CCNT(&conf->info),
+                                       PJMEDIA_PIA_SPF(&conf->info),
+                                       PJMEDIA_PIA_BITS(&conf->info),
+                                       &p_port);
+#endif
         pjmedia_snd_port_create(Pool::Instance().toPjPool(),
                                     -1, -1,
                                     PJMEDIA_PIA_SRATE(&conf->info),
@@ -152,43 +162,6 @@ bool Recorder::_create(const char *fname)
 bool Recorder::_create2()
 {
 
-    p_port = (pjmedia_port*)Pool::Instance().zero_alloc(sizeof(pjmedia_port));
-    if(!p_port) {
-        return false;
-    }
-
-    pjmedia_port* p = pjmedia_conf_get_master_port(pjsua_var.mconf);
-
-    pj_str_t name = pj_str("special port");
-    pjmedia_port_info_init(&p_port->info,
-                           &name,
-                           PJMEDIA_SIG_CLASS_PORT_AUD('s', 'i'),
-                           PJMEDIA_PIA_SRATE(&p->info),
-                           PJMEDIA_PIA_CCNT(&p->info),
-                           PJMEDIA_PIA_BITS(&p->info),
-                           PJMEDIA_PIA_SPF(&p->info)
-                           );
-
-
-    p_port->get_frame = &Recorder::my_get_frame;
-    p_port->put_frame = &Recorder::my_put_frame;
-
-
-    p_smp_data = (pj_int16_t*)Pool::Instance().zero_alloc(PJMEDIA_PIA_SPF(&p_port->info));
-
-
-    pjmedia_snd_port_create(Pool::Instance().toPjPool(),
-                                -1, -1,
-                                PJMEDIA_PIA_SRATE(&p->info),
-                                PJMEDIA_PIA_CCNT(&p->info),
-                                PJMEDIA_PIA_SPF(&p->info),
-                                PJMEDIA_PIA_BITS(&p->info),
-                                0,
-                                &p_sndPort);
-
-    pjmedia_snd_port_connect(p_sndPort, p_port);
-
-    return true;
 
 }
 
@@ -251,10 +224,12 @@ void Recorder::start()
         m_isRecording = true;
         p_mutex = new PjMutex();
         p_thread = new PjThread(this);
+#if 0
+         pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
+#endif
 
-        pjmedia_conf_connect_port(pjsua_var.mconf,
-                                  m_sink,
-                                  m_slot, 0);
+         pjsua_conf_connect(m_sink, m_slot);
+
 
         ((PjThread*)p_thread)->p_entry = &Recorder::entryPoint;
         p_thread->create(PJTHR_STACK_SIZE, 0, PjThread::thEntryPoint,
@@ -271,7 +246,7 @@ void Recorder::doWork()
 {
     if (m_isRecording) {
 
-       unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
+        unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
         pjmedia_frame frm, frm2;
         frm.buf = Pool::Instance().zero_alloc(spf);
         pj_int16_t* smpls = new pj_int16_t[spf];
@@ -283,8 +258,22 @@ void Recorder::doWork()
         // TODO read why doubling the buffer for frame... 160 << 1???
         frm2.buf = Pool::Instance().alloc(PJMEDIA_PIA_SPF(&call_port->port->info) << 1);
         frm2.size = (PJMEDIA_PIA_SPF(&call_port->port->info)) << 1;
-        pjmedia_port_get_frame(call_port->port, &frm2);
-//        pjmedia_port_put_frame(call_port->port, &frm2);
+
+        // try to get a frame from the incomming port
+        pj_status_t res = pjmedia_port_get_frame(call_port->port, &frm2) ;
+        if (res != PJ_SUCCESS) {
+            static char txt[128]={0};
+            sprintf(txt, "Failed to get frame from callID: [%d]: Err:[%d]\n",
+                    getSrc(), res);
+            // do we need to lock here... never missed a frame...
+            Console::Instance().putData(QByteArray("Failed to get a frame"));
+            return;
+        }
+
+#if 0
+        pjmedia_port_put_frame(call_port->port, &frm2);
+#endif
+
 
         memcpy(smpls,
                (pj_int16_t*)frm2.buf,

@@ -59,8 +59,8 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
 
     if (info.media_status == PJSUA_CALL_MEDIA_ACTIVE) {
 
-        pjsua_conf_connect(info.conf_slot, 0);
-        pjsua_conf_connect(0, info.conf_slot);
+        //pjsua_conf_connect(0, info.conf_slot);
+        pjsua_conf_connect(info.conf_slot, g_recorder->getSlot());
 
         for(int i=0; i < g_players.count(); i++) {
             g_players.at(i)->setSrc(info.conf_slot);
@@ -228,11 +228,7 @@ bool SipApp::create(const QString &uri)
         g_recorder->create();
 
     }
-#if 0
-    Thread* t = new PjThread(g_recorder);
-    ((PjThread*)t)->p_entry = &entry;
-    t->create(0, 0, PjThread::thEntryPoint, this);
-#endif
+
     return m_isCreated;
 
 }
