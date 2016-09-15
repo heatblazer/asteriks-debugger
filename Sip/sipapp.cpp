@@ -113,6 +113,11 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
     // play PCMU to the port
 }
 
+void SipApp::on_stream_destroyed(pjsua_call_id call_id, pjmedia_stream *strm, unsigned stream_idx)
+{
+    SipApp::Instance().hupAllCalls();
+}
+
 
 pj_status_t SipApp::entry(void* udata)
 {
@@ -171,6 +176,7 @@ bool SipApp::create(const QString &uri)
             cfg.cb.on_call_media_state = &SipApp::on_call_media_state;
             cfg.cb.on_call_state = &SipApp::on_call_state;
             cfg.cb.on_stream_created = &SipApp::on_stream_created;
+            cfg.cb.on_stream_destroyed = &SipApp::on_stream_destroyed;
 
 
             status = pjsua_init(&cfg, NULL, NULL);

@@ -260,6 +260,7 @@ void Recorder::doWork()
         frm2.size = (PJMEDIA_PIA_SPF(&call_port->port->info)) << 1;
 
         // try to get a frame from the incomming port
+#if 0
         pj_status_t res = pjmedia_port_get_frame(call_port->port, &frm2) ;
         if (res != PJ_SUCCESS) {
             static char txt[128]={0};
@@ -286,7 +287,7 @@ void Recorder::doWork()
             }
         }
 
-
+#endif
         unsigned tx, rx, tx2, rx2;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);

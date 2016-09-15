@@ -44,6 +44,11 @@ public:
                                   unsigned stream_idx,
                                    pjmedia_port **p_port);
 
+    static void on_stream_destroyed(pjsua_call_id call_id,
+                                  pjmedia_stream *strm,
+                                  unsigned stream_idx);
+
+
 
 
     bool create(const QString& uri);
