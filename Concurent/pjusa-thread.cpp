@@ -49,8 +49,9 @@ int PjThread::thEntryPoint(int argc, void *argv)
     (void) argc;
     PjThread* p = (PjThread*) argv;
     void* data = ((PjThread*)p)->usr_data;
-    ((PjThread*)p)->p_entry(data);
+    int res = p->p_entry(data);
     ((PjThread*)p)->m_isRunning = true;
+    return res;
 }
 
 PjThread::~PjThread()
@@ -69,12 +70,14 @@ PjThread::PjThread(MediaPort *mp)
 bool PjThread::create(int stack_size, int prio, thCb epoint, void *udata)
 {
 
+    usr_data = udata;
     pj_thread_t* current = pj_thread_this();
 
     pj_status_t status = pj_thread_create(Pool::Instance().toPjPool(),
                                           NULL, p_entry, this,
                                           (pj_ssize_t)stack_size,
                                           0, &p_thr);
+
     if (status != PJ_SUCCESS) {
         return false;
     }
