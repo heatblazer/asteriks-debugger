@@ -57,6 +57,7 @@ public:
     // that is gained on call media state
     void setConfSlot(pjsua_conf_port_id conf_slot);
     int getConfSlot(void);
+    pjmedia_conf* getConfBridge();
 
     void makeACall(const char *uri);
     void hupAllCalls(void);

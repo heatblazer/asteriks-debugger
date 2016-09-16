@@ -45,18 +45,21 @@ public:
     void start();
     void connectPlayer(unsigned src);
     void doWork(void);
+    void enablePeek();
 
 private:
 
     bool _create(const char* fname);
     bool _create2();
     bool _create_player();
+    pj_int16_t _peekAnalyze(pjmedia_frame* frm);
 
 
 private:
     pjmedia_snd_port* p_sndPort;
     unsigned m_slot;
     bool m_isRecording;
+    bool m_peek;
     QString m_fname;
     int m_samples;
     pj_int16_t* p_smp_data;

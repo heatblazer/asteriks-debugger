@@ -70,6 +70,7 @@ Recorder::Recorder(const QString& fname)
       p_sndPort(nullptr),
       m_slot(0),
       m_isRecording(false),
+      m_peek(false),
       m_fname(fname),
       m_samples(0),
       p_smp_data(nullptr),
@@ -193,6 +194,26 @@ bool Recorder::_create_player()
 
 
 
+pj_int16_t Recorder::_peekAnalyze(pjmedia_frame *frm)
+{
+    int spf = m_samples << 1;
+    pj_int16_t* smpls = new pj_int16_t[spf];
+    pj_int16_t hwm = 0;
+    memcpy(smpls,
+           (pj_int16_t*)frm->buf,
+           spf);
+
+    for(int i=0; i < spf; i++) {
+        pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
+        if (hwm < abs_val ) {
+            hwm = abs_val;
+        }
+    }
+    return hwm;
+}
+
+
+
 pjmedia_port *Recorder::pjPort()
 {
     return p_port;
@@ -244,50 +265,40 @@ void Recorder::start()
 ///
 void Recorder::doWork()
 {
+
     if (m_isRecording) {
 
         unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
         pjmedia_frame frm, frm2;
         frm.buf = Pool::Instance().zero_alloc(spf);
-        pj_int16_t* smpls = new pj_int16_t[spf];
         pj_int16_t hwm=0;
 
         pjmedia_conf2* hijack = reinterpret_cast<pjmedia_conf2*>(pjsua_var.mconf);
         conf_port* call_port = hijack->ports[getSrc()];
+
 
         // TODO read why doubling the buffer for frame... 160 << 1???
         frm2.buf = Pool::Instance().alloc(PJMEDIA_PIA_SPF(&call_port->port->info) << 1);
         frm2.size = (PJMEDIA_PIA_SPF(&call_port->port->info)) << 1;
 
         // try to get a frame from the incomming port
-#if 0
-        pj_status_t res = pjmedia_port_get_frame(call_port->port, &frm2) ;
-        if (res != PJ_SUCCESS) {
-            static char txt[128]={0};
-            sprintf(txt, "Failed to get frame from callID: [%d]: Err:[%d]\n",
-                    getSrc(), res);
-            // do we need to lock here... never missed a frame...
-            Console::Instance().putData(QByteArray("Failed to get a frame"));
-            return;
-        }
+        if (m_peek) {
 
-#if 0
-        pjmedia_port_put_frame(call_port->port, &frm2);
-#endif
-
-
-        memcpy(smpls,
-               (pj_int16_t*)frm2.buf,
-               spf);
-
-        for(int i=0; i < spf; i++) {
-            pj_int16_t abs_val = (pj_int16_t)abs(smpls[i]);
-            if (hwm < abs_val ) {
-                hwm = abs_val;
+            pj_status_t res = pjmedia_port_get_frame(call_port->port, &frm2) ;
+            pjmedia_stream2* strm = reinterpret_cast<pjmedia_stream2*>(call_port->port->port_data.pdata);
+            (void)strm;
+            if (res != PJ_SUCCESS) {
+                static char txt[128]={0};
+                sprintf(txt, "Failed to get frame from callID: [%d]: Err:[%d]\n",
+                        getSrc(), res);
+                // do we need to lock here... never missed a frame...
+                Console::Instance().putData(QByteArray("Failed to get a frame"));
+                return;
             }
+            hwm = _peekAnalyze(&frm2);
+
         }
 
-#endif
         unsigned tx, rx, tx2, rx2;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);
@@ -305,6 +316,11 @@ void Recorder::doWork()
 
 
     }
+}
+
+void Recorder::enablePeek()
+{
+    m_peek ^= true;
 }
 
 

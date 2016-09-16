@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QThread>
 #include <QApplication>
+#include <QMutex>
 
 // sip app //
 #include "Sip/sipapp.h"
@@ -142,14 +143,20 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.tones[1].setText("1k-6db");
         m_tones_widget.tones[2].setText("1k-12db");
         m_tones_widget.tones[3].setText("1k-24db");
-
+        m_tones_widget.peek_button.setText("Peek ON/OFF");
+        m_tones_widget.volume.setOrientation(Qt::Horizontal);
         for(int i=0; i < 4; i++) {
             m_tones_widget.tones[i].setMinimumSize(80, 30);
             m_tones_widget.tones[i].setMaximumSize(80, 30);
             m_tones_widget.layout2.addWidget(&m_tones_widget.tones[i]);
             // connect to players
          }
+        m_tones_widget.volume.setRange(-127, 128);
+        m_tones_widget.volume.setValue(0);
+
         m_tones_widget.layout.addLayout(&m_tones_widget.layout2);
+        m_tones_widget.layout.addWidget(&m_tones_widget.peek_button);
+        m_tones_widget.layout.addWidget(&m_tones_widget.volume);
     }
 
     // connect file players
@@ -162,6 +169,10 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(play1kminus12db()));
         connect(&m_tones_widget.tones[3], SIGNAL(clicked(bool)),
                 this, SLOT(play1kminus24db()));
+        connect(&m_tones_widget.peek_button, SIGNAL(clicked(bool)),
+                this, SLOT(enableDisablePeek()));
+        connect(&m_tones_widget.volume, SIGNAL(valueChanged(int)),
+                this, SLOT(setConfVolume(int)));
 
     }
 
@@ -171,10 +182,10 @@ Gui::Gui(QWidget *parent)
         m_vuMeter.spacer = new QSpacerItem(60, 10);
         m_vuMeter.layout.addSpacerItem(m_vuMeter.spacer);
 
-        m_vuMeter.label[0].setText("Coef. X4969");
+        m_vuMeter.label[0].setText("Peek(16)");
         m_vuMeter.progressBar[0].setMinimumSize(25, 300);
         m_vuMeter.progressBar[0].setMaximumSize(25, 300);
-        m_vuMeter.progressBar[0].setMaximum(65535);
+        m_vuMeter.progressBar[0].setMaximum(65535/2);
 
         m_vuMeter.progressBar[0].setTextVisible(true);
         m_vuMeter.progressBar[1].setTextVisible(true);
@@ -386,6 +397,24 @@ void Gui::play1kminus24db()
     p_sipApp->g_players.at(3)->playToConf();
 }
 
+void Gui::enableDisablePeek()
+{
+    p_sipApp->g_recorder->enablePeek();
+}
+
+void Gui::setConfVolume(int vol)
+{
+
+   if (p_sipApp != NULL) {
+        pjmedia_conf_adjust_rx_level(p_sipApp->getConfBridge(),
+                                0, vol);
+   }
+   char txt[64]={0};
+   sprintf(txt, "Conf volume is: [%d]\n", vol);
+   Console::Instance().putData(txt);
+
+}
+
 
 void Gui::updateVuMeterTx()
 {
@@ -561,6 +590,7 @@ void Ruler::paintEvent(QPaintEvent *event)
         pnt.setPen(QColor(0,0,255));
         pnt.drawText(QRect(5, m_position.y()-step, 20, 20),
                      QString(QString::number(i)));
+
         step+= 20;
     }
 }

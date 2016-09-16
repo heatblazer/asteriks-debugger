@@ -50,7 +50,8 @@ SOURCES += main.cpp \
     Sip/player.cpp \
     Sip/recorder.cpp \
     Sip/sipapp.cpp \
-    Gui/gui.cpp
+    Gui/gui.cpp \
+    defs.cpp
 
 HEADERS  += \
     defs.h \

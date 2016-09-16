@@ -16,6 +16,7 @@
 #include <QFileDialog>
 #include <QProgressBar>
 #include <QLabel>
+#include <QSlider>
 
 #include "defs.h"
 
@@ -89,6 +90,8 @@ private slots:
     void play1kminus6db();
     void play1kminus12db();
     void play1kminus24db();
+    void enableDisablePeek();
+    void setConfVolume(int vol);
 
     void updateVuMeterTx();
     void updateVuMeterRx();
@@ -130,6 +133,8 @@ private:
     struct {
         QTextEdit text;
         QPushButton tones[4];
+        QPushButton peek_button;
+        QSlider     volume;
         QVBoxLayout layout;
         QHBoxLayout layout2;
     } m_tones_widget;

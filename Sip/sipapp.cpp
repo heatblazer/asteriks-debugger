@@ -6,6 +6,9 @@
 // C++ //
 #include <iostream>
 
+// defs //
+#include "defs.h"
+
 // recorder //
 #include "recorder.h"
 
@@ -233,6 +236,7 @@ bool SipApp::create(const QString &uri)
 
         g_recorder->create();
 
+        dummy();
     }
 
     return m_isCreated;
@@ -247,6 +251,11 @@ void SipApp::setConfSlot(pjsua_conf_port_id conf_slot)
 int SipApp::getConfSlot()
 {
     return (int) m_current_slot;
+}
+
+pjmedia_conf *SipApp::getConfBridge()
+{
+    return pjsua_var.mconf;
 }
 
 void SipApp::makeACall(const char* uri)
