@@ -47,6 +47,18 @@ private:
 
 };
 
+
+class PjLockGuard
+{
+public:
+    explicit PjLockGuard(PjMutex* const m) ;
+    ~PjLockGuard();
+private:
+    PjMutex* const m_mutex;
+
+};
+
+
 } // namespace izdebug
 
 #endif // PJSUATHREAD_H

@@ -3,6 +3,8 @@
 
 #include "defs.h"
 
+#include <QMutex>
+
 namespace izdebug {
 
 class MediaPort;
@@ -11,10 +13,29 @@ class MediaPort;
 class Mutex
 {
 public:
-    virtual ~Mutex() = 0;
-    virtual void lock() = 0;
-    virtual bool tryLock() = 0;
-    virtual void unlock() = 0;
+    virtual ~Mutex()=0;
+    virtual void lock()=0;
+    virtual bool tryLock()=0;
+    virtual void unlock()=0;
+};
+
+template <class T> class LockGuard
+{
+public:
+    explicit LockGuard(T* const m)
+        : m_ref(m)
+    {
+        m_ref->lock();
+    }
+
+    ~LockGuard()
+    {
+        m_ref->unlock();
+    }
+
+private:
+
+    T* const  m_ref;
 };
 
 class Thread
@@ -34,6 +55,15 @@ protected:
     // later refractor
 };
 
+
+class QtLockGuard
+{
+public:
+    explicit QtLockGuard(QMutex& th);
+    ~QtLockGuard();
+private:
+    QMutex& m_ref;
+};
 
 } // namespace izdebug
 

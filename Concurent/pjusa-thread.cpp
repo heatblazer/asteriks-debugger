@@ -10,6 +10,7 @@
 
 namespace izdebug {
 
+
 PjMutex::~PjMutex()
 {
     pj_mutex_destroy(m_mutex);
@@ -118,6 +119,17 @@ void *PjThread::getCurrentThread()
 MediaPort *PjThread::getPort()
 {
     return m_port;
+}
+
+PjLockGuard::PjLockGuard(PjMutex * const m)
+    : m_mutex(m)
+{
+    m_mutex->lock();
+}
+
+PjLockGuard::~PjLockGuard()
+{
+    m_mutex->unlock();
 }
 
 
