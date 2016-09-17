@@ -51,7 +51,8 @@ SOURCES += main.cpp \
     Sip/recorder.cpp \
     Sip/sipapp.cpp \
     Gui/gui.cpp \
-    defs.cpp
+    defs.cpp \
+    Network/socket.cpp
 
 HEADERS  += \
     defs.h \
@@ -158,7 +159,8 @@ HEADERS  += \
     Sip/player.h \
     Sip/recorder.h \
     Sip/sipapp.h \
-    Gui/gui.h
+    Gui/gui.h \
+    Network/socket.h
 
 target.path = $$OUT_PWD
 target.files = $$PWD/assets/

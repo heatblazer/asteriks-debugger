@@ -192,8 +192,11 @@ bool Recorder::_create_player()
 
 }
 
-
-
+/// analyze a frame`s highest sample
+/// \brief Recorder::_peekAnalyze
+/// \param frm
+/// \return
+///
 pj_int16_t Recorder::_peekAnalyze(pjmedia_frame *frm)
 {
     int spf = m_samples << 1;
@@ -243,7 +246,6 @@ void Recorder::start()
     // start to record
     if (!m_isRecording) {
         m_isRecording = true;
-        p_mutex = new PjMutex();
         p_thread = new PjThread(this);
 #if 0
          pjmedia_conf_connect_port(pjsua_var.mconf, m_slot, m_sink, 0);
@@ -268,6 +270,7 @@ void Recorder::doWork()
 
     if (m_isRecording) {
 
+
         unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
         pjmedia_frame frm, frm2;
         frm.buf = Pool::Instance().zero_alloc(spf);
@@ -275,7 +278,6 @@ void Recorder::doWork()
 
         pjmedia_conf2* hijack = reinterpret_cast<pjmedia_conf2*>(pjsua_var.mconf);
         conf_port* call_port = hijack->ports[getSrc()];
-
 
         // TODO read why doubling the buffer for frame... 160 << 1???
         frm2.buf = Pool::Instance().alloc(PJMEDIA_PIA_SPF(&call_port->port->info) << 1);
@@ -285,8 +287,11 @@ void Recorder::doWork()
         if (m_peek) {
 
             pj_status_t res = pjmedia_port_get_frame(call_port->port, &frm2) ;
+#if 0
             pjmedia_stream2* strm = reinterpret_cast<pjmedia_stream2*>(call_port->port->port_data.pdata);
-            (void)strm;
+            pjmedia_jbuf2* jbuf = reinterpret_cast<pjmedia_jbuf2*>(strm->jb);
+#endif
+
             if (res != PJ_SUCCESS) {
                 static char txt[128]={0};
                 sprintf(txt, "Failed to get frame from callID: [%d]: Err:[%d]\n",
@@ -298,7 +303,10 @@ void Recorder::doWork()
             hwm = _peekAnalyze(&frm2);
 
         }
-
+#if 0
+        pjmedia_aud_stream2* audstrm =
+                reinterpret_cast<pjmedia_aud_stream2*>(pjmedia_snd_port_get_snd_stream(pjsua_var.snd_port));
+#endif
         unsigned tx, rx, tx2, rx2;
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);
@@ -307,14 +315,12 @@ void Recorder::doWork()
 
         // coming too fast from gui thread, we may corrupt the paint()
         static QMutex m;
-        m.lock();
+        QtLockGuard lg(m);
+
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(tx);
         Gui::Instance().m_vuMeter.progressBar[2].setValue(tx2);
-        m.unlock();
-        QThread::currentThread()->sleep(0);
-
-
+        QThread::currentThread()->sleep(0);        
     }
 }
 

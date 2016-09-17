@@ -27,12 +27,27 @@ void dummy(void);
 typedef int (*thCb)(int, void*);
 typedef pj_status_t (*pjThrEpoint)(void*);
 
-union port_data {
-    pj_int16_t *buff;
+struct WavHdr
+{
+    char riff[4];
+    int file_size;
+    char wave[4];
+    char fmt[4];
+    char len[3];
+    int16_t type;
+    int16_t format;
+    int sample_rate;
+    int sr_bs_channs;
+    int8_t bits_per_sample;
+    char data[4];
+    int fsize;
 };
 
 
 
+union port_data {
+    pj_int16_t *buff;
+};
 
 /** Hijacket structure for the conference bridge
  * This is a port connected to conference bridge.
@@ -350,5 +365,312 @@ struct pjmedia_endpt2
     /** List of exit callback. */
     exit_cb		  exit_cb_list;
 };
+
+
+// hijack of jbuff
+/* Invalid sequence number, used as the initial value. */
+#define INVALID_OFFSET		-9999
+
+/* Maximum burst length, whenever an operation is bursting longer than
+ * this value, JB will assume that the opposite operation was idle.
+ */
+#define MAX_BURST_MSEC		1000
+
+/* Number of OP switches to be performed in JB_STATUS_INITIALIZING, before
+ * JB can switch its states to JB_STATUS_PROCESSING.
+ */
+#define INIT_CYCLE		10
+
+
+/* Minimal difference between JB size and 2*burst-level to perform
+ * JB shrinking in static discard algorithm.
+ */
+#define STA_DISC_SAFE_SHRINKING_DIFF	1
+
+
+/* Struct of JB internal buffer, represented in a circular buffer containing
+ * frame content, frame type, frame length, and frame bit info.
+ */
+typedef struct jb_framelist_t
+{
+    /* Settings */
+    unsigned	     frame_size;	/**< maximum size of frame	    */
+    unsigned	     max_count;		/**< maximum number of frames	    */
+
+    /* Buffers */
+    char	    *content;		/**< frame content array	    */
+    int		    *frame_type;	/**< frame type array		    */
+    pj_size_t	    *content_len;	/**< frame length array		    */
+    pj_uint32_t	    *bit_info;		/**< frame bit info array	    */
+    pj_uint32_t	    *ts;		/**< timestamp array		    */
+
+    /* States */
+    unsigned	     head;		/**< index of head, pointed frame
+                         will be returned by next GET   */
+    unsigned	     size;		/**< current size of framelist,
+                         including discarded frames.    */
+    unsigned	     discarded_num;	/**< current number of discarded
+                         frames.			    */
+    int		     origin;		/**< original index of flist_head   */
+
+} jb_framelist_t;
+
+
+
+typedef void (*discard_algo)(pjmedia_jbuf *jb);
+// hijacked jitter buffer
+struct pjmedia_jbuf2
+{
+    /* Settings (consts) */
+    pj_str_t	    jb_name;		/**< jitter buffer name		    */
+    pj_size_t	    jb_frame_size;	/**< frame size			    */
+    unsigned	    jb_frame_ptime;	/**< frame duration.		    */
+    pj_size_t	    jb_max_count;	/**< capacity of jitter buffer,
+                         in frames			    */
+    int		    jb_init_prefetch;	/**< Initial prefetch		    */
+    int		    jb_min_prefetch;	/**< Minimum allowable prefetch	    */
+    int		    jb_max_prefetch;	/**< Maximum allowable prefetch	    */
+    int		    jb_max_burst;	/**< maximum possible burst, whenever
+                         burst exceeds this value, it
+                         won't be included in level
+                         calculation		    */
+    int		    jb_min_shrink_gap;	/**< How often can we shrink	    */
+    discard_algo    jb_discard_algo;	/**< Discard algorithm		    */
+
+    /* Buffer */
+    jb_framelist_t  jb_framelist;	/**< the buffer			    */
+
+    /* States */
+    int		    jb_level;		/**< delay between source &
+                         destination (calculated according
+                         of the number of burst get/put
+                         operations)		    */
+    int		    jb_max_hist_level;  /**< max level during the last level
+                         calculations		    */
+    int		    jb_stable_hist;	/**< num of times the delay has	been
+                         lower then the prefetch num    */
+    int		    jb_last_op;		/**< last operation executed
+                         (put/get)			    */
+    int		    jb_eff_level;	/**< effective burst level	    */
+    int		    jb_prefetch;	/**< no. of frame to insert before
+                         removing some (at the beginning
+                         of the framelist->content
+                         operation), the value may be
+                         continuously updated based on
+                         current frame burst level.	    */
+    pj_bool_t	    jb_prefetching;	/**< flag if jbuf is prefetching.   */
+    int		    jb_status;		/**< status is 'init' until the	first
+                         'put' operation		    */
+    int		    jb_init_cycle_cnt;	/**< status is 'init' until the	first
+                         'put' operation		    */
+
+    int		    jb_discard_ref;	/**< Seq # of last frame deleted or
+                         discarded			    */
+    unsigned	    jb_discard_dist;	/**< Distance from jb_discard_ref
+                         to perform discard (in frm)    */
+
+    /* Statistics */
+    pj_math_stat    jb_delay;		/**< Delay statistics of jitter buffer
+                         (in ms)			    */
+    pj_math_stat    jb_burst;		/**< Burst statistics (in frames)   */
+    unsigned	    jb_lost;		/**< Number of lost frames.	    */
+    unsigned	    jb_discard;		/**< Number of discarded frames.    */
+    unsigned	    jb_empty;		/**< Number of empty/prefetching frame
+                         returned by GET. */
+};
+
+
+
+
+/* $Id: audiodev_imp.h 3553 2011-05-05 06:14:19Z nanang $ */
+/*
+ * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
+ * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+#ifndef __AUDIODEV_IMP_H__
+#define __AUDIODEV_IMP_H__
+
+#include <pjmedia-audiodev/audiodev.h>
+
+/**
+ * @defgroup s8_audio_device_implementors_api Audio Device Implementors API
+ * @ingroup audio_device_api
+ * @brief API for audio device implementors
+ * @{
+ */
+
+/**
+ * Sound device factory operations.
+ */
+typedef struct pjmedia_aud_dev_factory_op
+{
+    /**
+     * Initialize the audio device factory.
+     *
+     * @param f		The audio device factory.
+     */
+    pj_status_t (*init)(pjmedia_aud_dev_factory *f);
+
+    /**
+     * Close this audio device factory and release all resources back to the
+     * operating system.
+     *
+     * @param f		The audio device factory.
+     */
+    pj_status_t (*destroy)(pjmedia_aud_dev_factory *f);
+
+    /**
+     * Get the number of audio devices installed in the system.
+     *
+     * @param f		The audio device factory.
+     */
+    unsigned (*get_dev_count)(pjmedia_aud_dev_factory *f);
+
+    /**
+     * Get the audio device information and capabilities.
+     *
+     * @param f		The audio device factory.
+     * @param index	Device index.
+     * @param info	The audio device information structure which will be
+     *			initialized by this function once it returns
+     *			successfully.
+     */
+    pj_status_t	(*get_dev_info)(pjmedia_aud_dev_factory *f,
+                unsigned index,
+                pjmedia_aud_dev_info *info);
+
+    /**
+     * Initialize the specified audio device parameter with the default
+     * values for the specified device.
+     *
+     * @param f		The audio device factory.
+     * @param index	Device index.
+     * @param param	The audio device parameter.
+     */
+    pj_status_t (*default_param)(pjmedia_aud_dev_factory *f,
+                 unsigned index,
+                 pjmedia_aud_param *param);
+
+    /**
+     * Open the audio device and create audio stream. See
+     * #pjmedia_aud_stream_create()
+     */
+    pj_status_t (*create_stream)(pjmedia_aud_dev_factory *f,
+                 const pjmedia_aud_param *param,
+                 pjmedia_aud_rec_cb rec_cb,
+                 pjmedia_aud_play_cb play_cb,
+                 void *user_data,
+                 pjmedia_aud_stream **p_aud_strm);
+
+    /**
+     * Refresh the list of audio devices installed in the system.
+     *
+     * @param f		The audio device factory.
+     */
+    pj_status_t (*refresh)(pjmedia_aud_dev_factory *f);
+
+} pjmedia_aud_dev_factory_op;
+
+
+/**
+ * This structure describes an audio device factory.
+ */
+struct pjmedia_aud_dev_factory
+{
+    /** Internal data to be initialized by audio subsystem. */
+    struct {
+    /** Driver index */
+    unsigned drv_idx;
+    } sys;
+
+    /** Operations */
+    pjmedia_aud_dev_factory_op *op;
+};
+
+
+/**
+ * Sound stream operations.
+ */
+typedef struct pjmedia_aud_stream_op2
+{
+    /**
+     * See #pjmedia_aud_stream_get_param()
+     */
+    pj_status_t (*get_param)(pjmedia_aud_stream *strm,
+                 pjmedia_aud_param *param);
+
+    /**
+     * See #pjmedia_aud_stream_get_cap()
+     */
+    pj_status_t (*get_cap)(pjmedia_aud_stream *strm,
+               pjmedia_aud_dev_cap cap,
+               void *value);
+
+    /**
+     * See #pjmedia_aud_stream_set_cap()
+     */
+    pj_status_t (*set_cap)(pjmedia_aud_stream *strm,
+               pjmedia_aud_dev_cap cap,
+               const void *value);
+
+    /**
+     * See #pjmedia_aud_stream_start()
+     */
+    pj_status_t (*start)(pjmedia_aud_stream *strm);
+
+    /**
+     * See #pjmedia_aud_stream_stop().
+     */
+    pj_status_t (*stop)(pjmedia_aud_stream *strm);
+
+    /**
+     * See #pjmedia_aud_stream_destroy().
+     */
+    pj_status_t (*destroy)(pjmedia_aud_stream *strm);
+
+} pjmedia_aud_stream_op2;
+
+
+/**
+ * This structure describes the audio device stream.
+ */
+struct pjmedia_aud_stream2
+{
+    /** Internal data to be initialized by audio subsystem */
+    struct {
+    /** Driver index */
+    unsigned drv_idx;
+    } sys;
+
+    /** Operations */
+    pjmedia_aud_stream_op2 *op;
+};
+
+
+
+
+/**
+ * @}
+ */
+
+
+
+#endif /* __AUDIODEV_IMP_H__ */
+
+
 
 #endif // DEFS_H
