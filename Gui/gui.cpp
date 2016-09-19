@@ -147,6 +147,8 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(play1kminus24db()));
         connect(&m_tones_widget.peek_button, SIGNAL(clicked(bool)),
                 this, SLOT(enableDisablePeek()));
+        connect(&m_tones_widget.rtsp_rec, SIGNAL(clicked(bool)),
+                this, SLOT(hClicked4()));
         connect(&m_tones_widget.volume, SIGNAL(valueChanged(int)),
                 this, SLOT(setConfVolume(int)));
 
@@ -303,6 +305,22 @@ void Gui::hClicked3()
 
 }
 
+void Gui::hClicked4()
+{
+    static bool toggle  = true;
+    if (toggle) {
+        bool res = rtspRecStart();
+        if (res) {
+            Console::Instance().putData(QByteArray("Started the RTSP recorder...\n"));
+        } else {
+            return ;
+        }
+    } else {
+        Console::Instance().putData(QByteArray("Stopped the RTSP recorder...\n"));
+    }
+    toggle ^= true;
+}
+
 void Gui::echoTest()
 {
     m_call_widget.toggle_rec ^= (1 << 0);
@@ -317,13 +335,16 @@ void Gui::echoTest()
 
 bool Gui::call()
 {
+    // fixed logical stuff - don`t care if the text is empty
+    if (m_call_widget.text.toPlainText().isEmpty()) {
+        return false;
+    }
     // send the string to sip!
     char* data = m_call_widget.text.toPlainText().toLatin1().data();
     utils::trim(data);
     char tel[64]={0};
     sprintf(tel, "%s", data);
-    if(!m_call_widget.text.toPlainText().isEmpty() &&
-        _isValidDigit(tel)) {
+    if(_isValidDigit(tel)) {
         // OK send to server
         char uri[256]={0};
         sprintf(uri, "sip:%s@192.168.32.89", tel);
@@ -332,6 +353,46 @@ bool Gui::call()
     }
     Console::Instance().putData(QByteArray("Error in digits!"));
     return false;
+}
+
+bool Gui::rtspRecStart()
+{
+    bool res = false;
+    // no data
+    if (m_tones_widget.ip_port.toPlainText().isEmpty()) {
+        return res;
+    }
+    char* data = m_tones_widget.ip_port.toPlainText().toLatin1().data();
+    utils::trim(data);
+
+    if (!_isValidIpPort(data)) {
+        Console::Instance().putData(QByteArray("Invalid format XX.XX.XX.XX:PORT"));
+        return res;
+    }
+    // finally start the RTSP recorder here
+    // an instance held into the SipApp
+    if(!p_sipApp->p_rtsp->isStreaming()) {
+        // code goes here
+        char uri[16] = {0};
+        int i;
+        for(i=0; data[i] != ':'; i++) {
+            uri[i] = data[i];
+        }
+        uri[i] = 0;
+        char* token = strchr(data, ':');
+        token++;
+        pj_uint16_t port = (pj_uint16_t) atoi(token);
+
+        res = p_sipApp->createRtspRec(uri, port);
+        if (!res) {
+            return res;
+        }
+        char txt[256]={0};
+        sprintf(txt,"Started RTSP transmission to [%s:%d]\n", uri, port);
+        Console::Instance().putData(QByteArray(txt));
+    }
+
+    return res;
 }
 
 void Gui::hClear()
@@ -470,6 +531,11 @@ bool Gui::_isValidDigit(const char *str)
         tmp++;
     }
     return isOk;
+}
+
+bool Gui::_isValidIpPort(const char *url)
+{
+    return utils::aux_is_valid_ip_port(url);
 }
 
 void Gui::myLog(int level, const char *data, int len)

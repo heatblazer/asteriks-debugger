@@ -73,11 +73,15 @@ signals:
     void sendUri(const char* uri);
 
 private slots:
+    /// Unused
+    /// \brief hTextChange
+    ///
     void hTextChange();
 
     void hClicked1();
     void hClicked2();
     void hClicked3();
+    void hClicked4();
 
     void echoTest();
 
@@ -106,7 +110,10 @@ private:
     explicit Gui(QWidget *parent=nullptr);
     virtual ~Gui();
     bool call();
+    bool rtspRecStart();
+
     bool _isValidDigit(const char* str);
+    bool _isValidIpPort(const char* url);
 
 private:
     QHBoxLayout m_hbox;
