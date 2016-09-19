@@ -110,6 +110,7 @@ bool Recorder::_create(const char *fname)
 
         if (conf == NULL) {
             // no conf bridge? why?
+            return m_isOk; // false
         }
 
         pj_status_t status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
