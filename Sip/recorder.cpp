@@ -311,16 +311,16 @@ void Recorder::doWork()
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSrc(), &tx, &rx);
         pjmedia_conf_get_signal_level(pjsua_var.mconf, getSlot(), &tx2, &rx2);
 
-        pj_thread_sleep(50);
+        // each 3th frame or each if samples per frame are 180
+        pj_thread_sleep(60);
 
         // coming too fast from gui thread, we may corrupt the paint()
         static QMutex m;
-        QtLockGuard lg(m);
+        QtLockGuard l(m);
 
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(tx);
         Gui::Instance().m_vuMeter.progressBar[2].setValue(tx2);
-        QThread::currentThread()->sleep(0);        
     }
 }
 
