@@ -71,7 +71,10 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
 
         g_recorder->setSrc(info.conf_slot);
         g_recorder->start();
-
+#if 0
+        SipApp::Instance().p_rtsp->setSrc(info.conf_slot);
+        SipApp::Instance().p_rtsp->start_streaming();
+#endif
      }
 }
 
@@ -231,12 +234,14 @@ bool SipApp::create(const QString &uri)
         }
         m_isCreated = true;
         for(int i=0; i < g_players.count(); i++) {
-            g_players.at(i)->create();
+            m_isCreated &= g_players.at(i)->create();
         }
 
-        g_recorder->create();
+        m_isCreated &= g_recorder->create();
 
+        // bebug break point from anywhere, defined in defs.h
         dummy();
+
     }
 
     return m_isCreated;
@@ -278,6 +283,14 @@ void SipApp::hupAllCalls()
         g_players.at(i)->stop();
     }
     g_recorder->stop();
+}
+
+bool SipApp::createRtspRec(const char *uri, pj_uint16_t port)
+{
+    p_rtsp = new RtspRec(uri, port);
+    bool ok =  p_rtsp->create();
+
+    return ok;
 }
 
 

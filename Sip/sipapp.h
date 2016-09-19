@@ -15,6 +15,7 @@
 
 #include "player.h"
 #include "recorder.h"
+#include "rtsp-rec.h"
 
 namespace izdebug {
 
@@ -29,6 +30,7 @@ public:
 public:
     static QList<Player*> g_players;
     static Recorder*    g_recorder;
+    RtspRec*    p_rtsp; // access from the cb-s
 
 
     static SipApp& Instance();
@@ -61,6 +63,8 @@ public:
 
     void makeACall(const char *uri);
     void hupAllCalls(void);
+
+    bool createRtspRec(const char* uri, pj_uint16_t port);
 
 public:
     explicit SipApp();
