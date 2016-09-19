@@ -13,6 +13,7 @@
 // custom stuff //
 #include "Sip/recorder.h"
 #include "Sip/player.h"
+#include "Utils/utils.h"
 
 // pjlib //
 #include <pjlib-util/cli.h>
@@ -23,44 +24,7 @@
 #include <pjlib.h>
 
 
-/// aux function to determine strlen
-/// \brief aux_strlen
-/// \param data
-/// \return
-///
-static int aux_strlen(const char* data)
-{
-    int len = 0;
-    while(*data != '\0') {
-        len++;
-        data++;
-    }
 
-    return len;
-}
-
-/// aux function to trim whitespaces
-/// \brief trim
-/// \param data
-///
-static void trim(char* data)
-{
-    char* begin= data;
-    char* end = &data[aux_strlen(data)-1];
-    while(*begin == ' ') {
-        begin++;
-    }
-
-    while(*begin != '\0') {
-
-        *data++ = *begin++;
-    }
-
-    while(*end == ' ') {
-        *end-- = 0;
-    }
-
-}
 
 
 namespace izdebug {
@@ -144,18 +108,30 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.tones[2].setText("1k-12db");
         m_tones_widget.tones[3].setText("1k-24db");
         m_tones_widget.peek_button.setText("Peek ON/OFF");
+        m_tones_widget.rtsp_rec.setText("RTSP REC (START/STOP)");
+
         m_tones_widget.volume.setOrientation(Qt::Horizontal);
         for(int i=0; i < 4; i++) {
             m_tones_widget.tones[i].setMinimumSize(80, 30);
             m_tones_widget.tones[i].setMaximumSize(80, 30);
             m_tones_widget.layout2.addWidget(&m_tones_widget.tones[i]);
             // connect to players
-         }
+        }
+        m_tones_widget.ip_port.setMaximumHeight(20);
+        m_tones_widget.ip_port.setMaximumWidth(200);
+        m_tones_widget.ip_port.setMinimumHeight(20);
+        m_tones_widget.ip_port.setMinimumWidth(200);
+
+
+
+
         m_tones_widget.volume.setRange(-127, 128);
         m_tones_widget.volume.setValue(0);
 
         m_tones_widget.layout.addLayout(&m_tones_widget.layout2);
         m_tones_widget.layout.addWidget(&m_tones_widget.peek_button);
+        m_tones_widget.layout.addWidget(&m_tones_widget.ip_port);
+        m_tones_widget.layout.addWidget(&m_tones_widget.rtsp_rec);
         m_tones_widget.layout.addWidget(&m_tones_widget.volume);
     }
 
@@ -343,7 +319,7 @@ bool Gui::call()
 {
     // send the string to sip!
     char* data = m_call_widget.text.toPlainText().toLatin1().data();
-    trim(data);
+    utils::trim(data);
     char tel[64]={0};
     sprintf(tel, "%s", data);
     if(!m_call_widget.text.toPlainText().isEmpty() &&

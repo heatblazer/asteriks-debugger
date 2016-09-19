@@ -134,6 +134,8 @@ private:
         QTextEdit text;
         QPushButton tones[4];
         QPushButton peek_button;
+        QTextEdit   ip_port;
+        QPushButton rtsp_rec;
         QSlider     volume;
         QVBoxLayout layout;
         QHBoxLayout layout2;
