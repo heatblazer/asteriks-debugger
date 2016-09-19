@@ -53,7 +53,9 @@ SOURCES += main.cpp \
     Gui/gui.cpp \
     defs.cpp \
     Network/socket.cpp \
-    Utils/utils.cpp
+    Utils/utils.cpp \
+    Sip/rtsp-rec.cpp \
+    Sip/bridge-port.cpp
 
 HEADERS  += \
     defs.h \
@@ -163,7 +165,8 @@ HEADERS  += \
     Gui/gui.h \
     Network/socket.h \
     Sip/rtsp-rec.h \
-    Utils/utils.h
+    Utils/utils.h \
+    Sip/bridge-port.h
 
 target.path = $$OUT_PWD
 target.files = $$PWD/assets/
