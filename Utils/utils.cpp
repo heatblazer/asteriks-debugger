@@ -30,17 +30,18 @@ bool utils::aux_is_valid_ip_port(const char* fname)
 
     bool res = true;
     // first check if there are 0 indexes, should not be possible
+    // can`t have a leading . in IP:PORT strings
     for(int i=0; i < 4; i++) {
         if (dots[i]==0) {
             res = false;
-            return res;
+            return res; // no need for more checks - it`s not OK anyway
         }
     }
 
     for(int i; i < 4; i++) {
         for(int j=i+1; j < 4; j++) {
             if (dots[j] - dots[i] <= 1) {
-                // they are adjacent no way
+                // they are adjacent no way to be a valid IP:PORT
                 res &= false;
             }
         }
@@ -67,7 +68,7 @@ int utils::aux_strlen(const char* data)
     return len;
 }
 
-/// aux function to trim whitespaces
+/// aux function to trim whitespaces (no tabs or newlines)
 /// \brief trim
 /// \param data
 ///
@@ -78,6 +79,7 @@ void utils::trim(char* data)
     char* end = &data[aux_strlen(data)-1];
     int len = aux_strlen(data) - 1;
     int flush_idx = 0;
+
     while(*begin == ' ') {
         begin++;
     }
