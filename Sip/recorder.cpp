@@ -316,8 +316,8 @@ void Recorder::doWork()
         pj_thread_sleep(60);
 
         // coming too fast from gui thread, we may corrupt the paint()
-        static QMutex m;
-        QtLockGuard l(m);
+        QMutex m;
+        LockGuard<QMutex> lock(m);
 
         Gui::Instance().m_vuMeter.progressBar[0].setValue(hwm);
         Gui::Instance().m_vuMeter.progressBar[1].setValue(tx);

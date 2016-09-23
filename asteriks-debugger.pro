@@ -173,3 +173,6 @@ target.files = $$PWD/assets/
 
 INSTALLS += target
 
+DISTFILES += \
+    rfc1889/rfc1889
+

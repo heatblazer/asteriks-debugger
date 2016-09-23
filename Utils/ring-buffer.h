@@ -3,17 +3,27 @@
 
 namespace izdebug {
 
-class RingBuffer
+template <class T> class RingBuffer
 {
 public:
-    RingBuffer();
-    RingBuffer(unsigned long size=0);
+    explicit RingBuffer(int size, int tracks)
+        : m_size(size),
+          m_tracks(tracks)
+    {
+        m_data = new T*[m_tracks];
+        for(int i=0; i < m_tracks; i++) {
+            m_data = new T[m_size];
+        }
+    }
+
     ~RingBuffer();
 
 
 private:
-    unsigned long m_size;
-    void* m_data;
+    int m_size;
+    int m_tracks;
+    int m_count;
+    T** m_data; // normally uint8 but I have to use 16 bit integers for samples
 };
 
 
