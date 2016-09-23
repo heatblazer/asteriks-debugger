@@ -22,20 +22,20 @@ public:
 template <class T> class LockGuard
 {
 public:
-    explicit LockGuard(T* const m)
+    explicit LockGuard( T&  m)
         : m_ref(m)
     {
-        m_ref->lock();
+        m_ref.lock();
     }
 
     ~LockGuard()
     {
-        m_ref->unlock();
+        m_ref.unlock();
     }
 
 private:
 
-    T* const  m_ref;
+    T& m_ref;
 };
 
 class Thread
