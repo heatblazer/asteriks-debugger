@@ -81,7 +81,8 @@ private slots:
     void hClicked1();
     void hClicked2();
     void hClicked3();
-    void hClicked4();
+    void startRTSPServer();
+    void hClicked5();
 
     void echoTest();
 
@@ -143,6 +144,7 @@ private:
         QPushButton peek_button;
         QTextEdit   ip_port;
         QPushButton rtsp_rec;
+        QPushButton rtsp_play;
         QSlider     volume;
         QVBoxLayout layout;
         QHBoxLayout layout2;

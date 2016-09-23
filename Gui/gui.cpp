@@ -108,7 +108,8 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.tones[2].setText("1k-12db");
         m_tones_widget.tones[3].setText("1k-24db");
         m_tones_widget.peek_button.setText("Peek ON/OFF");
-        m_tones_widget.rtsp_rec.setText("RTSP REC (START/STOP)");
+        m_tones_widget.rtsp_rec.setText("RTSP REC (SERVER)");
+        m_tones_widget.rtsp_play.setText("RTSP REC (CLIENT)");
 
         m_tones_widget.volume.setOrientation(Qt::Horizontal);
         for(int i=0; i < 4; i++) {
@@ -132,6 +133,7 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.layout.addWidget(&m_tones_widget.peek_button);
         m_tones_widget.layout.addWidget(&m_tones_widget.ip_port);
         m_tones_widget.layout.addWidget(&m_tones_widget.rtsp_rec);
+        m_tones_widget.layout.addWidget(&m_tones_widget.rtsp_play);
         m_tones_widget.layout.addWidget(&m_tones_widget.volume);
     }
 
@@ -148,7 +150,7 @@ Gui::Gui(QWidget *parent)
         connect(&m_tones_widget.peek_button, SIGNAL(clicked(bool)),
                 this, SLOT(enableDisablePeek()));
         connect(&m_tones_widget.rtsp_rec, SIGNAL(clicked(bool)),
-                this, SLOT(hClicked4()));
+                this, SLOT(startRTSPServer()));
         connect(&m_tones_widget.volume, SIGNAL(valueChanged(int)),
                 this, SLOT(setConfVolume(int)));
 
@@ -302,11 +304,15 @@ void Gui::hClicked2()
 
 void Gui::hClicked3()
 {
-
+// stub
 }
 
-void Gui::hClicked4()
+/// starts the rtsp recorder
+/// \brief Gui::hClicked4
+///
+void Gui::startRTSPServer()
 {
+    m_tones_widget.rtsp_play.setEnabled(false);
     static bool toggle  = true;
     if (toggle) {
         bool res = rtspRecStart();
@@ -319,6 +325,11 @@ void Gui::hClicked4()
         Console::Instance().putData(QByteArray("Stopped the RTSP recorder...\n"));
     }
     toggle ^= true;
+}
+
+void Gui::hClicked5()
+{
+    m_tones_widget.rtsp_rec.setEnabled(false);
 }
 
 void Gui::echoTest()
