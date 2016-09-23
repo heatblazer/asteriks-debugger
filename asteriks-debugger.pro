@@ -39,7 +39,6 @@ LIBS += -lpjsua2-x86_64-unknown-linux-gnu \
     -lasound
 
 SOURCES += main.cpp \
-    Utils/ring-buffer.cpp \
     Concurent/pjusa-thread.cpp \
     Concurent/thread.cpp \
     Alsa/alsa-debugger.cpp \
@@ -151,7 +150,6 @@ HEADERS  += \
     External/kfr/io.hpp \
     External/kfr/math.hpp \
     External/kfr/version.hpp \
-    Utils/ring-buffer.h \
     Concurent/pjsua-thread.h \
     Concurent/thread.h \
     Alsa/alsa-debugger.h \
@@ -166,7 +164,8 @@ HEADERS  += \
     Network/socket.h \
     Sip/rtsp-rec.h \
     Utils/utils.h \
-    Sip/bridge-port.h
+    Sip/bridge-port.h \
+    Utils/ring-buffer.h
 
 target.path = $$OUT_PWD
 target.files = $$PWD/assets/
