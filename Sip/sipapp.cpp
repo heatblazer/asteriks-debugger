@@ -25,6 +25,7 @@ SipApp* SipApp::s_instance = nullptr;
 QList<Player*> SipApp::g_players;
 
 Recorder* SipApp::g_recorder = nullptr;
+RtspRec* SipApp::p_rtsp = nullptr;
 
 
 SipApp &SipApp::Instance()
@@ -71,10 +72,10 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
 
         g_recorder->setSrc(info.conf_slot);
         g_recorder->start();
-#if 0
-        SipApp::Instance().p_rtsp->setSrc(info.conf_slot);
-        SipApp::Instance().p_rtsp->start_streaming();
-#endif
+        if (p_rtsp->asServer()) {
+            p_rtsp->setSrc(0);
+            p_rtsp->start_streaming();
+        }
      }
 }
 
@@ -285,12 +286,18 @@ void SipApp::hupAllCalls()
     g_recorder->stop();
 }
 
-bool SipApp::createRtspRec(const char *uri, pj_uint16_t port)
+bool SipApp::createRtspRecServer(const char *uri, pj_uint16_t port)
 {
-    p_rtsp = new RtspRec(uri, port);
+    p_rtsp = new RtspRec(uri, port, true);
     bool ok =  p_rtsp->create();
 
     return ok;
+}
+
+bool SipApp::createRtspRecClient(const char *uri, pj_uint16_t port)
+{
+    bool res = false;
+    return res;
 }
 
 
