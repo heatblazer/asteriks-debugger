@@ -6,10 +6,24 @@
 
 namespace izdebug {
 
+/// this class will act as CLIENT/SERVER
+/// to test it must staart 2 instances of the program
+/// then to clicke RTSP (CLIENT) on the one instance
+/// and RTSP (SERVER) on the second so the server will
+/// start transmit realtime streaming to the client
+/// client will implement
+/// 1. setup
+/// 2. play
+/// 3. options
+/// 4. teardown
+/// Server will have
+/// 1. RTSP/1.0 200 OK responses
+/// \brief The RtspRec class
+///
 class RtspRec : public MediaPort
 {
 public:
-    RtspRec(const char* host, pj_uint16_t port);
+    RtspRec(const char* host, pj_uint16_t port, bool is_server);
     ~RtspRec();
     bool create();
     void setSlot(unsigned slot);
@@ -21,6 +35,18 @@ public:
     bool start_streaming();
     bool isStreaming();
 
+    // rtsp specific as CLIENT
+    void options(const char* str);
+    void describe(const char* str);
+    void setup(const char* str);
+    void play(const char* str);
+    void teardown(const char* str);
+
+    bool asServer();
+
+    // rtsp specific as SERVE
+
+
 private:
     bool _create_stream();
 private:
@@ -30,6 +56,7 @@ private:
     pjmedia_stream* p_stream;
     BridgePort*     p_bridge;
     bool            m_isStreaming;
+    bool            m_isServer;
 };
 
 } // namespace izdebug

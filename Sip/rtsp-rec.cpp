@@ -7,9 +7,10 @@
 
 namespace izdebug {
 
-RtspRec::RtspRec(const char* host, pj_uint16_t port)
+RtspRec::RtspRec(const char* host, pj_uint16_t port, bool is_server)
     : m_port(port),
-      m_isStreaming(false)
+      m_isStreaming(false),
+      m_isServer(is_server)
 {
     m_url = pj_str((char*)host);
 
@@ -72,6 +73,11 @@ bool RtspRec::start_streaming()
 bool RtspRec::isStreaming()
 {
     return m_isStreaming;
+}
+
+bool RtspRec::asServer()
+{
+    return m_isServer;
 }
 
 bool RtspRec::_create_stream()
@@ -165,5 +171,36 @@ bool RtspRec::_create_stream()
     return m_isOk;
 }
 
+
+#if 0
+PJ_ASSERT_RETURN(status == PJ_SUCCESS, 1);
+
+
+if (play_file) {
+unsigned wav_ptime;
+
+wav_ptime = PJMEDIA_PIA_PTIME(&stream_port->info);
+status = pjmedia_wav_player_port_create(pool, play_file, wav_ptime,
+                    0, -1, &play_file_port);
+if (status != PJ_SUCCESS) {
+    app_perror(THIS_FILE, "Unable to use file", status);
+    goto on_exit;
+}
+
+status = pjmedia_master_port_create(pool, play_file_port, stream_port,
+                    0, &master_port);
+if (status != PJ_SUCCESS) {
+    app_perror(THIS_FILE, "Unable to create master port", status);
+    goto on_exit;
+}
+
+status = pjmedia_master_port_start(master_port);
+if (status != PJ_SUCCESS) {
+    app_perror(THIS_FILE, "Error starting master port", status);
+    goto on_exit;
+}
+
+printf("Playing from WAV file %s..\n", play_file);
+#endif
 
 } // namespace izdebug
