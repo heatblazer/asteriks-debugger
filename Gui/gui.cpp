@@ -394,7 +394,7 @@ bool Gui::rtspRecStart()
         token++;
         pj_uint16_t port = (pj_uint16_t) atoi(token);
 
-        res = p_sipApp->createRtspRec(uri, port);
+        res = p_sipApp->createRtspRecServer(uri, port);
         if (!res) {
             return res;
         }
