@@ -49,6 +49,8 @@ union port_data {
     pj_int16_t *buff;
 };
 
+////////////////////////// hijacked for debugging /////////////////////////////
+
 /** Hijacket structure for the conference bridge
  * This is a port connected to conference bridge.
  */
