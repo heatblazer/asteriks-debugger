@@ -70,7 +70,7 @@ PjThread::PjThread(MediaPort *mp)
 
 bool PjThread::create(int stack_size, int prio, thCb epoint, void *udata)
 {
-
+    (void) epoint;
     usr_data = udata;
     pj_thread_t* current = pj_thread_this();
 

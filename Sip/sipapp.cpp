@@ -128,17 +128,20 @@ void SipApp::on_stream_created(pjsua_call_id call_id, pjmedia_stream *strm,
 
 void SipApp::on_stream_destroyed(pjsua_call_id call_id, pjmedia_stream *strm, unsigned stream_idx)
 {
+    (void) call_id;
+    (void) strm;
+    (void) stream_idx;
     SipApp::Instance().hupAllCalls();
 }
 
 
 pj_status_t SipApp::entry(void* udata)
 {
-
+    (void) udata;
     for(;;) {
         printf("Thread for SIPAPP!\n");
     }
-
+    return PJ_SUCCESS;
 }
 
 /// the standalone sip application
@@ -174,7 +177,6 @@ bool SipApp::create(const QString &uri)
         if (status != PJ_SUCCESS) {
             return false;
         }
-
 
         status = pjsua_verify_url(uri.toLatin1().constData());
         if (status != PJ_SUCCESS) {
@@ -301,6 +303,8 @@ bool SipApp::createRtspRecServer(const char *uri, pj_uint16_t port)
 
 bool SipApp::createRtspRecClient(const char *uri, pj_uint16_t port)
 {
+    (void) uri;
+    (void) port;
     bool res = false;
     return res;
 }

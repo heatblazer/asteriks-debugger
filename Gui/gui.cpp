@@ -24,9 +24,6 @@
 #include <pjlib.h>
 
 
-
-
-
 namespace izdebug {
 
 Gui*    Gui::s_instance=nullptr;
@@ -124,9 +121,6 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.ip_port.setMaximumWidth(200);
         m_tones_widget.ip_port.setMinimumHeight(20);
         m_tones_widget.ip_port.setMinimumWidth(200);
-
-
-
 
         m_tones_widget.volume.setRange(-127, 128);
         m_tones_widget.volume.setValue(0);
@@ -424,7 +418,7 @@ void Gui::playFile()
 
     if (!m_tones_widget.text.toPlainText().isEmpty()) {
         const char* s = m_tones_widget.text.toPlainText().toLatin1().constData();
-
+        (void) s;
     }
 }
 
@@ -554,6 +548,8 @@ bool Gui::_isValidIpPort(const char *url)
 
 void Gui::myLog(int level, const char *data, int len)
 {
+    (void) data;
+    (void) len;
 }
 
 Gui &Gui::Instance()
@@ -637,17 +633,18 @@ Ruler::~Ruler()
 
 void Ruler::paintEvent(QPaintEvent *event)
 {
+    (void) event;
     QPainter pnt(this);
-
+    static const int STEP = 20;
     int step = 45;
     for(int i=0; i < 15; i++) {
         pnt.setPen(QColor(255, 0, 0));
-        pnt.drawRect(QRect(0, m_position.y()-step, 0, 20));
+        pnt.drawRect(QRect(0, m_position.y()-step, 0, STEP));
         pnt.setPen(QColor(0,0,255));
-        pnt.drawText(QRect(5, m_position.y()-step, 20, 20),
+        pnt.drawText(QRect(5, m_position.y()-step, STEP, STEP),
                      QString(QString::number(i)));
 
-        step+= 20;
+        step+= STEP;
     }
 }
 

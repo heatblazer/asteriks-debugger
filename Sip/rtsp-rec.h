@@ -2,7 +2,6 @@
 #define RTSPREC_H
 
 #include "mediaport.h" // base
-#include "bridge-port.h" // connect ports
 
 namespace izdebug {
 
@@ -61,7 +60,6 @@ private:
     pj_str_t        m_url;
     pj_uint16_t     m_port;
     pjmedia_stream* p_stream;
-    BridgePort*     p_bridge;
     bool            m_isStreaming;
     bool            m_isRecording;
     bool            m_isServer;

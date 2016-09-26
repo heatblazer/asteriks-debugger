@@ -24,6 +24,7 @@
 
 static void my_put_frame(pjmedia_port* p, pjmedia_frame* frm)
 {
+    (void)frm;
     pjmedia_conf2* cnf = (pjmedia_conf2*) p->port_data.pdata;
     struct conf_port* port = cnf->ports[p->port_data.ldata];
 
@@ -36,26 +37,29 @@ namespace izdebug {
 
 pj_status_t Recorder::my_get_frame(pjmedia_port *port, pjmedia_frame *frame)
 {
+    (void) frame;
     if(port->port_data.pdata != NULL) {
         pj_int16_t* smp = new pj_int16_t[port->port_data.ldata];
         memcpy(smp, (pj_int16_t*)port->port_data.pdata, port->port_data.ldata);
 
     }
+    return PJ_SUCCESS;
 }
 
 pj_status_t Recorder::my_put_frame(pjmedia_port *port, pjmedia_frame *frame)
 {
 
+    (void) port;
     if(frame->buf) {
         pj_int16_t* smp = new pj_int16_t[frame->size];
         memcpy(smp, (pj_int16_t*)frame->buf, frame->size);
 
     }
+    return PJ_SUCCESS;
 }
 
 pj_status_t Recorder::entryPoint(void *user_data)
 {
-
 
     PjThread* t = (PjThread*) user_data;
     Recorder* r = (Recorder*)t->getPort();
@@ -63,6 +67,7 @@ pj_status_t Recorder::entryPoint(void *user_data)
     {
         r->doWork();
     }
+    return PJ_SUCCESS;
 }
 
 Recorder::Recorder(const QString& fname)
@@ -90,10 +95,10 @@ Recorder::~Recorder()
 
 bool Recorder::create()
 {
-//    return _create(m_fname.toLatin1().constData());
     if (!m_isOk) {
         return _create("recorder.wav");
     }
+    return false;
 }
 
 bool Recorder::isRecording()
@@ -103,6 +108,7 @@ bool Recorder::isRecording()
 
 bool Recorder::_create(const char *fname)
 {
+    (void) fname;
     if (!m_isOk) {
         pjmedia_port* conf = pjmedia_conf_get_master_port(pjsua_var.mconf);
 
@@ -164,7 +170,7 @@ bool Recorder::_create(const char *fname)
 bool Recorder::_create2()
 {
 
-
+    return false;
 }
 
 bool Recorder::_create_player()
@@ -274,6 +280,7 @@ void Recorder::doWork()
 
         unsigned int spf = PJMEDIA_PIA_SPF(&p_port->info);
         pjmedia_frame frm, frm2;
+        (void) frm;
         frm.buf = Pool::Instance().zero_alloc(spf);
         pj_int16_t hwm=0;
 

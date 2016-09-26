@@ -49,6 +49,8 @@ bool MediaPort::connect(pjsua_conf_port_id src, pjsua_conf_port_id dst)
     //if (s != PJ_SUCCESS) {
     //    return false;
     //}
+    (void) src;
+    (void) dst;
     return true;
 }
 

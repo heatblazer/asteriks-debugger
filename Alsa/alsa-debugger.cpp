@@ -109,7 +109,7 @@ ALSARecorder::~ALSARecorder()
 
 bool ALSARecorder::init()
 {
-
+    return true;
 }
 
 void ALSARecorder::_cleanup()

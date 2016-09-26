@@ -43,7 +43,6 @@ SOURCES += main.cpp \
     Concurent/thread.cpp \
     Alsa/alsa-debugger.cpp \
     Sip/call.cpp \
-    Sip/confbridge.cpp \
     Sip/mediaport.cpp \
     Sip/mem-pool.cpp \
     Sip/player.cpp \
@@ -53,8 +52,7 @@ SOURCES += main.cpp \
     defs.cpp \
     Network/socket.cpp \
     Utils/utils.cpp \
-    Sip/rtsp-rec.cpp \
-    Sip/bridge-port.cpp
+    Sip/rtsp-rec.cpp
 
 HEADERS  += \
     defs.h \
@@ -154,7 +152,6 @@ HEADERS  += \
     Concurent/thread.h \
     Alsa/alsa-debugger.h \
     Sip/call.h \
-    Sip/confbridge.h \
     Sip/mediaport.h \
     Sip/mem-pool.h \
     Sip/player.h \
@@ -164,7 +161,6 @@ HEADERS  += \
     Network/socket.h \
     Sip/rtsp-rec.h \
     Utils/utils.h \
-    Sip/bridge-port.h \
     Utils/ring-buffer.h
 
 target.path = $$OUT_PWD
