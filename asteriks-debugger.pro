@@ -40,7 +40,6 @@ LIBS += -lpjsua2-x86_64-unknown-linux-gnu \
 
 SOURCES += main.cpp \
     Concurent/pjusa-thread.cpp \
-    Concurent/thread.cpp \
     Alsa/alsa-debugger.cpp \
     Sip/call.cpp \
     Sip/mediaport.cpp \

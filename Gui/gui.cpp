@@ -107,8 +107,8 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.peek_button.setText("Peek ON/OFF");
         // set default IP:PORT
         m_tones_widget.ip_port.setText("127.0.0.1:10123");
-        m_tones_widget.rtsp_rec.setText("RTSP REC (SERVER)");
-        m_tones_widget.rtsp_play.setText("RTSP REC (CLIENT)");
+        m_tones_widget.rtsp_rec.setText("RTSP REC (SERVER) [START/STOP]");
+        m_tones_widget.rtsp_play.setText("RTSP REC (CLIENT) [START/STOP]");
 
         m_tones_widget.volume.setOrientation(Qt::Horizontal);
         for(int i=0; i < 4; i++) {

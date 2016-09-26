@@ -13,7 +13,7 @@ class MediaPort;
 class Mutex
 {
 public:
-    virtual ~Mutex()=0;
+    virtual ~Mutex()=default;
     virtual void lock()=0;
     virtual bool tryLock()=0;
     virtual void unlock()=0;
@@ -55,15 +55,6 @@ protected:
     // later refractor
 };
 
-
-class QtLockGuard
-{
-public:
-    explicit QtLockGuard(QMutex& th);
-    ~QtLockGuard();
-private:
-    QMutex& m_ref;
-};
 
 } // namespace izdebug
 
