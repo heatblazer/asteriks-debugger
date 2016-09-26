@@ -72,9 +72,15 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
 
         g_recorder->setSrc(info.conf_slot);
         g_recorder->start();
-        if (p_rtsp->asServer()) {
-            p_rtsp->setSrc(0);
-            p_rtsp->start_streaming();
+
+        {
+            if (p_rtsp->asServer()) {
+                p_rtsp->setSrc(0);
+                p_rtsp->start_streaming();
+            } else {
+                p_rtsp->setSrc(0);
+                p_rtsp->start_recording();
+            }
         }
      }
 }
@@ -239,7 +245,6 @@ bool SipApp::create(const QString &uri)
         }
 
         m_isCreated &= g_recorder->create();
-
         // bebug break point from anywhere, defined in defs.h
         dummy();
 
