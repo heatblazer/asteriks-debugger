@@ -4,8 +4,9 @@
 #include <string.h>
 #include <iostream>
 
-#include "Concurent/thread.h"
+#include "Concurent/pjsua-thread.h"
 
+namespace izdebug {
 // lock guard //
 template <class T> class LockGuard
 {
@@ -82,16 +83,6 @@ public:
         std::cout << "\n";
         (*ret) = arr;
         return m_size; // arr size for iterratuon
-    }
-
-    // test function //
-    void print()
-    {
-        for(item_t* it=m_head; it != NULL; it = it->next)
-        {
-            std::cout << "[" <<(it->data) << "]" ;
-        }
-        std::cout << "\n";
     }
 
 private:
@@ -199,7 +190,6 @@ public:
 private:
     void _advance_write_head()
     {
-
         if (RW.write_head != m_tail) {
             RW.write_head++;
         } else {
@@ -271,10 +261,10 @@ private:
 #else
     T* m_buff;
 #endif
-    Mutex m_mutex;
+    PjMutex m_mutex;
 
 };
 
-
+} // namespace izdebug
 
 #endif // RINGBUFFER_H
