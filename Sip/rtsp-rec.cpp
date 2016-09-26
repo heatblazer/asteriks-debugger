@@ -9,7 +9,10 @@ namespace izdebug {
 
 RtspRec::RtspRec(const char* host, pj_uint16_t port, bool is_server)
     : m_port(port),
+      m_master(nullptr),
+      m_codec_info(nullptr),
       m_isStreaming(false),
+      m_isRecording(false),
       m_isServer(is_server)
 {
     m_url = pj_str((char*)host);
@@ -26,7 +29,15 @@ RtspRec::~RtspRec()
 bool RtspRec::create()
 {
     // other stuff if needed
-    bool res = _create_stream();
+    bool res = false;
+    res = _init_codecs();
+    if (res) {
+        res = _find_codecs(NULL);
+        if (res) {
+            res = _create_stream();
+        }
+    }
+
     return res;
 }
 
@@ -62,12 +73,27 @@ bool RtspRec::connect(pjsua_conf_port_id src, pjsua_conf_port_id dst)
 
 bool RtspRec::start_streaming()
 {
-    if (!m_isStreaming) {
-        pjmedia_conf_connect_port(pjsua_var.mconf, getSrc(), getSlot(), 0);
-        m_isStreaming = true;
-    }
+    if (asServer()) {
+        if (!m_isStreaming) {
+            pjmedia_conf_connect_port(pjsua_var.mconf, getSrc(), getSlot(), 0);
+            m_isStreaming = true;
+        }
 
-    return m_isStreaming;
+        return m_isStreaming;
+    }
+    return false;
+}
+
+bool RtspRec::start_recording()
+{
+    if (!asServer()) {
+        if(!m_isStreaming) {
+            pjmedia_conf_connect_port(pjsua_var.mconf, getSrc(), getSlot(), 0);
+            m_isStreaming = true;
+        }
+        return m_isStreaming;
+    }
+    return false;
 }
 
 bool RtspRec::isStreaming()
@@ -80,14 +106,25 @@ bool RtspRec::asServer()
     return m_isServer;
 }
 
+/// first register audioc codecs
+/// \brief RtspRec::_init_codecs
+/// \return
+///
+bool RtspRec::_init_codecs()
+{
+    bool res = false;
+    pj_status_t s = pjmedia_codec_register_audio_codecs(pjsua_var.med_endpt, NULL);
+
+    if (s == PJ_SUCCESS) {
+        res = true;
+    }
+    return res;
+}
+
 bool RtspRec::_create_stream()
 {
     if (!m_isOk) {
 
-        pj_status_t s = pjmedia_codec_register_audio_codecs(pjsua_var.med_endpt, NULL);
-        if (s != PJ_SUCCESS) {
-            return m_isOk;
-        }
         const pjmedia_codec_info* codec_info = NULL;
         pjmedia_codec_mgr_get_codec_info(pjmedia_endpt_get_codec_mgr(
                                              pjsua_var.med_endpt),
@@ -153,11 +190,14 @@ bool RtspRec::_create_stream()
             return m_isOk;
         }
 
+        // create the stream port
         status = pjmedia_stream_get_port(p_stream, &p_port);
         if (status != PJ_SUCCESS) {
             return m_isOk;
         }
         pj_str_t name = pj_str("RTSP stream port");
+
+        // add conf port to the conference bridge
         pjmedia_conf_add_port(pjsua_var.mconf,
                               Pool::Instance().toPjPool(),
                               p_port,
@@ -169,6 +209,41 @@ bool RtspRec::_create_stream()
 
     }
     return m_isOk;
+}
+
+bool RtspRec::_find_codecs(const char* id)
+{
+    bool res = false;
+    pjmedia_codec_mgr* codec_mgr  = NULL;
+    if (id) {
+        unsigned count = 1;
+        pj_str_t codec = pj_str((char*)id);
+        codec_mgr = pjmedia_endpt_get_codec_mgr(pjsua_var.med_endpt);
+        if (codec_mgr == NULL) {
+            return res;
+        }
+
+
+        pj_status_t status = pjmedia_codec_mgr_find_codecs_by_id(codec_mgr,
+                                                                 &codec,
+                                                                 &count,
+                                                                 &m_codec_info,
+                                                                 NULL);
+        if(status != PJ_SUCCESS) {
+            return res;
+        }
+        res = true;
+    } else {
+    // default to PCMU
+        pjmedia_codec_mgr_get_codec_info(pjmedia_endpt_get_codec_mgr(pjsua_var.med_endpt),
+                                         0,
+                                         &m_codec_info);
+
+        res = true;
+
+    }
+
+    return res;
 }
 
 
