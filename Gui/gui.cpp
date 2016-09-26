@@ -108,6 +108,8 @@ Gui::Gui(QWidget *parent)
         m_tones_widget.tones[2].setText("1k-12db");
         m_tones_widget.tones[3].setText("1k-24db");
         m_tones_widget.peek_button.setText("Peek ON/OFF");
+        // set default IP:PORT
+        m_tones_widget.ip_port.setText("127.0.0.1:10123");
         m_tones_widget.rtsp_rec.setText("RTSP REC (SERVER)");
         m_tones_widget.rtsp_play.setText("RTSP REC (CLIENT)");
 
@@ -317,7 +319,8 @@ void Gui::startRTSPServer()
     if (toggle) {
         bool res = rtspRecStart();
         if (res) {
-            Console::Instance().putData(QByteArray("Started the RTSP recorder...\n"));
+            Console::Instance().putData(QByteArray("Created the RTSP recorder...\n"));
+            Console::Instance().putData(QByteArray("Waiting for transmission...\n"));
         } else {
             return ;
         }
@@ -382,7 +385,7 @@ bool Gui::rtspRecStart()
     }
     // finally start the RTSP recorder here
     // an instance held into the SipApp
-    if(!p_sipApp->p_rtsp->isStreaming()) {
+    if(p_sipApp) {
         // code goes here
         char uri[16] = {0};
         int i;
