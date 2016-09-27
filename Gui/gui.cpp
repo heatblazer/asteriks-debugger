@@ -149,6 +149,8 @@ Gui::Gui(QWidget *parent)
                 this, SLOT(startRTSPServer()));
         connect(&m_tones_widget.volume, SIGNAL(valueChanged(int)),
                 this, SLOT(setConfVolume(int)));
+        connect(&m_tones_widget.rtsp_play, SIGNAL(clicked(bool)),
+                this, SLOT(hClicked5()));
 
     }
 
@@ -236,9 +238,9 @@ Gui::Gui(QWidget *parent)
         connect(&m_call_widget.button3, SIGNAL(clicked(bool)),
                 this, SLOT(hClicked3()));
         connect(&m_call_widget.button2, SIGNAL(clicked(bool)),
-                this, SLOT(hClicked2()));
+                this, SLOT(hupAllCalls()));
         connect(&m_call_widget.button1, SIGNAL(clicked(bool)),
-                this, SLOT(hClicked1()));
+                this, SLOT(tryCall()));
         connect(this, SIGNAL(sendUri(const char*)),
                 this, SLOT(makeACall(const char*)));
 
@@ -278,7 +280,7 @@ void Gui::hTextChange()
 {
 }
 
-void Gui::hClicked1()
+void Gui::tryCall()
 {
 
     if (call()) {
@@ -287,7 +289,7 @@ void Gui::hClicked1()
 
 }
 
-void Gui::hClicked2()
+void Gui::hupAllCalls()
 {
     m_call_widget.button1.setDisabled(false);
     p_sipApp->hupAllCalls();
@@ -324,9 +326,27 @@ void Gui::startRTSPServer()
     toggle ^= true;
 }
 
+/// set the app as RTSP client
+/// STUB for now
+/// \brief Gui::hClicked5
+///
 void Gui::hClicked5()
 {
     m_tones_widget.rtsp_rec.setEnabled(false);
+    static bool toggle  = true;
+    if (toggle) {
+        bool res = rtspClientStart();
+        if (res) {
+            Console::Instance().putData(QByteArray("Created the RTSP player...\n"));
+            Console::Instance().putData(QByteArray("Waiting for data from server...\n"));
+        } else {
+            return ;
+        }
+    } else {
+        Console::Instance().putData(QByteArray("Stopped the RTSP recorder...\n"));
+    }
+    toggle ^= true;
+
 }
 
 void Gui::echoTest()
@@ -401,6 +421,45 @@ bool Gui::rtspRecStart()
     }
 
     return res;
+}
+
+bool Gui::rtspClientStart()
+{
+    bool res = false;
+    // no data
+    if (m_tones_widget.ip_port.toPlainText().isEmpty()) {
+        return res;
+    }
+    char* data = m_tones_widget.ip_port.toPlainText().toLatin1().data();
+    utils::trim(data);
+
+    if (!_isValidIpPort(data)) {
+        Console::Instance().putData(QByteArray("Invalid format XX.XX.XX.XX:PORT"));
+        return res;
+    }
+    if(p_sipApp) {
+        // code goes here
+        char uri[16] = {0};
+        int i;
+        for(i=0; data[i] != ':'; i++) {
+            uri[i] = data[i];
+        }
+        uri[i] = 0;
+        char* token = strchr(data, ':');
+        token++;
+        pj_uint16_t port = (pj_uint16_t) atoi(token);
+        res = p_sipApp->createRtspRecClient(uri, port);
+        if(!res) {
+            return res;
+        }
+        char txt[256]={0};
+        sprintf(txt,"Started RTSP recieving from [%s:%d]\n", uri, port);
+        Console::Instance().putData(QByteArray(txt));
+    }
+
+    return res;
+
+
 }
 
 void Gui::hClear()

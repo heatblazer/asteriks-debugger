@@ -7,9 +7,16 @@
 
 namespace izdebug {
 
+pjmedia_port* RtspRec::g_Port = nullptr;
+
 RtspRec::RtspRec(const char* host, pj_uint16_t port, bool is_server)
-    : m_port(port),
+    : MediaPort(),
+      m_player(nullptr),
+      m_rec(nullptr),
       m_master(nullptr),
+      m_port(port),
+      p_stream(nullptr),
+      p_snd_port(nullptr),
       m_codec_info(nullptr),
       m_isStreaming(false),
       m_isRecording(false),
@@ -21,9 +28,20 @@ RtspRec::RtspRec(const char* host, pj_uint16_t port, bool is_server)
 
 RtspRec::~RtspRec()
 {
+    if (m_player) {
+        delete m_player;
+        m_player = nullptr;
+    }
+
+    if (m_rec) {
+        delete m_rec;
+        m_rec = nullptr;
+    }
+
     pjmedia_transport* tp = pjmedia_stream_get_transport(p_stream);
     pjmedia_stream_destroy(p_stream);
     pjmedia_transport_close(tp);
+
 }
 
 bool RtspRec::create()
@@ -35,6 +53,9 @@ bool RtspRec::create()
         res = _find_codecs(NULL);
         if (res) {
             res = _create_stream();
+            g_Port = p_port;
+            res =  _create_recorder("test_rtsp_rec.wav");
+            res = _create_sound();
         }
     }
 
@@ -125,11 +146,10 @@ bool RtspRec::_create_stream()
 {
     if (!m_isOk) {
 
-        const pjmedia_codec_info* codec_info = NULL;
         pjmedia_codec_mgr_get_codec_info(pjmedia_endpt_get_codec_mgr(
                                              pjsua_var.med_endpt),
                                              0,
-                                             &codec_info);
+                                             &m_codec_info);
 
 
         pjmedia_stream_info info;
@@ -142,12 +162,17 @@ bool RtspRec::_create_stream()
 
 
         /* Initialize stream info formats */
-        info.type = PJMEDIA_TYPE_AUDIO;
-        info.dir = PJMEDIA_DIR_ENCODING_DECODING; // send and rcv
+        info.type = PJMEDIA_TYPE_AUDIO; // audio only
 
-        pj_memcpy(&info.fmt, codec_info, sizeof(pjmedia_codec_info));
-        info.tx_pt = codec_info->pt;
-        info.rx_pt = codec_info->pt;
+        if(m_isServer) {
+            info.dir = PJMEDIA_DIR_ENCODING; // send as server
+        } else {
+            info.dir = PJMEDIA_DIR_DECODING; // recv as client
+        }
+
+        pj_memcpy(&info.fmt, m_codec_info, sizeof(pjmedia_codec_info));
+        info.tx_pt = m_codec_info->pt;
+        info.rx_pt = m_codec_info->pt;
         info.ssrc = pj_rand();
 
 
@@ -189,6 +214,14 @@ bool RtspRec::_create_stream()
             pjmedia_transport_close(transport);
             return m_isOk;
         }
+
+
+        status = pjmedia_codec_mgr_get_default_param(
+                        pjmedia_endpt_get_codec_mgr(pjsua_var.med_endpt),
+                        m_codec_info,
+                        &codec_param);
+        /* Should be ok, as create_stream() above succeeded */
+        pj_assert(status == PJ_SUCCESS);
 
         // create the stream port
         status = pjmedia_stream_get_port(p_stream, &p_port);
@@ -246,36 +279,120 @@ bool RtspRec::_find_codecs(const char* id)
     return res;
 }
 
-
-#if 0
-PJ_ASSERT_RETURN(status == PJ_SUCCESS, 1);
-
-
-if (play_file) {
-unsigned wav_ptime;
-
-wav_ptime = PJMEDIA_PIA_PTIME(&stream_port->info);
-status = pjmedia_wav_player_port_create(pool, play_file, wav_ptime,
-                    0, -1, &play_file_port);
-if (status != PJ_SUCCESS) {
-    app_perror(THIS_FILE, "Unable to use file", status);
-    goto on_exit;
+bool RtspRec::_create_recorder(const char *fname)
+{
+    bool res = false;
+    m_rec = new RtspRec::Recorder(fname);
+    res = m_rec->create();
+    return res;
 }
 
-status = pjmedia_master_port_create(pool, play_file_port, stream_port,
-                    0, &master_port);
-if (status != PJ_SUCCESS) {
-    app_perror(THIS_FILE, "Unable to create master port", status);
-    goto on_exit;
+bool RtspRec::_create_player(const char *fname)
+{
+    bool res = false;
+    m_player = new RtspRec::Player(fname);
+    res = m_player->create();
+    return res;
 }
 
-status = pjmedia_master_port_start(master_port);
-if (status != PJ_SUCCESS) {
-    app_perror(THIS_FILE, "Error starting master port", status);
-    goto on_exit;
+bool RtspRec::_create_sound()
+{
+    bool res = true;
+    pj_status_t status;
+    if (m_isServer) {
+        status = pjmedia_snd_port_create_player(Pool::Instance().toPjPool(),
+                                                -1,
+                                                PJMEDIA_PIA_SRATE(&p_port->info),
+                                                PJMEDIA_PIA_CCNT(&p_port->info),
+                                                PJMEDIA_PIA_SPF(&p_port->info),
+                                                PJMEDIA_PIA_BITS(&p_port->info),
+                                                0, &p_snd_port);
+        if (status != PJ_SUCCESS) {
+            res = false;
+        }
+        status = pjmedia_snd_port_connect(p_snd_port, p_port);
+        if (status != PJ_SUCCESS) {
+            res = false;
+        }
+        pjmedia_stream_start(p_stream);
+    } else {
+        status = pjmedia_snd_port_create_rec(Pool::Instance().toPjPool(),
+                                                -1,
+                                                PJMEDIA_PIA_SRATE(&p_port->info),
+                                                PJMEDIA_PIA_CCNT(&p_port->info),
+                                                PJMEDIA_PIA_SPF(&p_port->info),
+                                                PJMEDIA_PIA_BITS(&p_port->info),
+                                                0, &p_snd_port);
+        if (status != PJ_SUCCESS) {
+            res = false;
+        }
+        status = pjmedia_snd_port_connect(p_snd_port, p_port);
+        if (status != PJ_SUCCESS) {
+            res = false;
+        }
+    }
+
+    return res;
 }
 
-printf("Playing from WAV file %s..\n", play_file);
-#endif
+
+RtspRec::Recorder::Recorder(const char *fname)
+    : MediaPort()
+{
+    strcpy(m_filename, fname);
+}
+
+RtspRec::Recorder::~Recorder()
+{
+}
+
+bool RtspRec::Recorder::create()
+{
+    bool res = true;
+    pj_status_t status;
+    status = pjmedia_wav_writer_port_create(Pool::Instance().toPjPool(),
+                                            m_filename,
+                                            PJMEDIA_PIA_SRATE(&g_Port->info),
+                                            PJMEDIA_PIA_CCNT(&g_Port->info),
+                                            PJMEDIA_PIA_SPF(&g_Port->info),
+                                            PJMEDIA_PIA_BITS(&g_Port->info),
+                                            0,
+                                            0,
+                                            &this->p_port);
+
+    if (status != PJ_SUCCESS) {
+        res = false;
+    }
+
+    return res;
+
+}
+
+
+RtspRec::Player::Player(const char *fname)
+    : MediaPort()
+{
+    strcpy(m_filename, fname);
+}
+
+RtspRec::Player::~Player()
+{
+}
+
+bool RtspRec::Player::create()
+{
+    bool res = true;
+    pj_status_t status;
+    unsigned wav_ptime = PJMEDIA_PIA_PTIME(&g_Port->info);
+    status = pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
+                                            m_filename,
+                                            wav_ptime,
+                                            0, 0, &this->p_port);
+    if (status != PJ_SUCCESS) {
+        res = false;
+    }
+
+    return res;
+}
 
 } // namespace izdebug

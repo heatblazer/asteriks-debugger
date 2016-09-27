@@ -22,7 +22,7 @@ public:
 template <class T> class LockGuard
 {
 public:
-    explicit LockGuard( T&  m)
+    explicit LockGuard(T&  m)
         : m_ref(m)
     {
         m_ref.lock();

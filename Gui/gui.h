@@ -78,8 +78,8 @@ private slots:
     ///
     void hTextChange();
 
-    void hClicked1();
-    void hClicked2();
+    void tryCall();
+    void hupAllCalls();
     void hClicked3();
     void startRTSPServer();
     void hClicked5();
@@ -112,6 +112,7 @@ private:
     virtual ~Gui();
     bool call();
     bool rtspRecStart();
+    bool rtspClientStart();
 
     bool _isValidDigit(const char* str);
     bool _isValidIpPort(const char* url);

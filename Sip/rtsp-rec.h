@@ -21,9 +21,39 @@ namespace izdebug {
 ///
 class RtspRec : public MediaPort
 {
+    /// very simple implementation of the player port
+    /// attached to a sound device for a simple test
+    /// \brief The SimplePlayer class
+    ///
+    class Player : public MediaPort
+    {
+    public:
+        explicit Player(const char* fname);
+        virtual ~Player();
+        bool create();
+        char m_filename[256];
+
+    };
+
+    /// very simple implementation of the recorder port
+    /// attached to a sound device for simple test
+    /// \brief The SimpleRecorder class
+    ///
+    class Recorder : public MediaPort
+    {
+    public:
+        explicit Recorder(const char* fname);
+        virtual ~Recorder();
+        bool create();
+        char m_filename[256];
+    };
+
+    RtspRec::Player* m_player;
+    RtspRec::Recorder* m_rec;
+
 public:
     RtspRec(const char* host, pj_uint16_t port, bool is_server);
-    ~RtspRec();
+    virtual ~RtspRec();
     bool create();
     void setSlot(unsigned slot);
     unsigned getSlot();
@@ -52,17 +82,28 @@ private:
     bool _create_stream();
     bool _find_codecs(const char *id);
 
+    bool _create_recorder(const char* fname);
+    bool _create_player(const char* fname);
+
+    bool _create_sound();
+
+
+
 private:
     // clock needed to the conf to stream
     pjmedia_master_port* m_master; // provide ticks for get/put frame cb()
     const pjmedia_codec_info *m_codec_info;
+    pjmedia_codec_param codec_param;
+
     pj_sockaddr_in  m_socket;
     pj_str_t        m_url;
     pj_uint16_t     m_port;
     pjmedia_stream* p_stream;
+    pjmedia_snd_port* p_snd_port;
     bool            m_isStreaming;
     bool            m_isRecording;
     bool            m_isServer;
+    static pjmedia_port*   g_Port;
 };
 
 } // namespace izdebug

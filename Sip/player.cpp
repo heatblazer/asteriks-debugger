@@ -35,7 +35,7 @@ bool Player::create()
 
         pj_status_t s = pjmedia_wav_player_port_create(Pool::Instance().toPjPool(),
                                        m_fname,
-                                       PJMEDIA_PIA_CCNT(&conf->info),
+                                       PJMEDIA_PIA_PTIME(&conf->info),
                                        0, 0,
                                        &p_port
                                        );

@@ -45,6 +45,7 @@ void SipApp::on_incomming_call(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip
     (void) acc_id;
     pjsua_call_get_info(call_id, &info);
 
+    // 200 - OK
     pjsua_call_answer(call_id, 200, NULL, NULL);
 }
 
@@ -73,7 +74,8 @@ void SipApp::on_call_media_state(pjsua_call_id call_id)
         g_recorder->setSrc(info.conf_slot);
         g_recorder->start();
 
-        {
+        // rtsp setup - start streaming the conf to a remote IP
+        if(1){
             if (p_rtsp->asServer()) {
                 p_rtsp->setSrc(0);
                 p_rtsp->start_streaming();
@@ -297,18 +299,15 @@ bool SipApp::createRtspRecServer(const char *uri, pj_uint16_t port)
 {
     p_rtsp = new RtspRec(uri, port, true);
     bool ok =  p_rtsp->create();
-
     return ok;
 }
 
 bool SipApp::createRtspRecClient(const char *uri, pj_uint16_t port)
 {
-    (void) uri;
-    (void) port;
-    bool res = false;
+    p_rtsp = new RtspRec(uri, port, false);
+    bool res = p_rtsp->create();
     return res;
 }
-
 
 
 } // namespace izdebug
