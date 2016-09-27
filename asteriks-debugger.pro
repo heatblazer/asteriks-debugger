@@ -51,7 +51,8 @@ SOURCES += main.cpp \
     defs.cpp \
     Network/socket.cpp \
     Utils/utils.cpp \
-    Sip/rtsp-rec.cpp
+    Sip/rtsp-rec.cpp \
+    System/stack-tracer.cpp
 
 HEADERS  += \
     defs.h \
@@ -160,7 +161,8 @@ HEADERS  += \
     Network/socket.h \
     Sip/rtsp-rec.h \
     Utils/utils.h \
-    Utils/ring-buffer.h
+    Utils/ring-buffer.h \
+    System/stack-tracer.h
 
 target.path = $$OUT_PWD
 target.files = $$PWD/assets/
