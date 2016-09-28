@@ -42,4 +42,4 @@ Pool::~Pool()
 }
 
 
-}
+} // namespace izdebug

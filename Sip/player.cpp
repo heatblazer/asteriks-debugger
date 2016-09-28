@@ -58,6 +58,7 @@ bool Player::create()
             return m_isOk;
         }
 
+
         {
             pjmedia_conf_add_port(pjsua_var.mconf, Pool::Instance().toPjPool(),
                                   p_port, NULL, &m_slot);
@@ -121,5 +122,5 @@ void Player::_disconnect_and_remove()
     }
 }
 
-}
+} // namespace izdebug
 
