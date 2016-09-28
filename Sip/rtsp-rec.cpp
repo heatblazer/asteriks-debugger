@@ -54,7 +54,8 @@ bool RtspRec::create()
         if (res) {
             res = _create_stream();
             g_Port = p_port;
-            res =  _create_recorder("test_rtsp_rec.wav");
+            res =  _create_recorder("test_rtsp_rec.wav") &&
+                    _create_player("assets/test.wav");
             res = _create_sound();
         }
     }
